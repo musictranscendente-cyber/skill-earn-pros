@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as GenesisRouteImport } from './routes/genesis'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ClaimRouteImport } from './routes/claim'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GenesisRoute = GenesisRouteImport.update({
   id: '/genesis',
   path: '/genesis',
@@ -40,12 +46,14 @@ export interface FileRoutesByFullPath {
   '/claim': typeof ClaimRoute
   '/dashboard': typeof DashboardRoute
   '/genesis': typeof GenesisRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/claim': typeof ClaimRoute
   '/dashboard': typeof DashboardRoute
   '/genesis': typeof GenesisRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,14 @@ export interface FileRoutesById {
   '/claim': typeof ClaimRoute
   '/dashboard': typeof DashboardRoute
   '/genesis': typeof GenesisRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/claim' | '/dashboard' | '/genesis'
+  fullPaths: '/' | '/claim' | '/dashboard' | '/genesis' | '/sitemap.xml'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/claim' | '/dashboard' | '/genesis'
-  id: '__root__' | '/' | '/claim' | '/dashboard' | '/genesis'
+  to: '/' | '/claim' | '/dashboard' | '/genesis' | '/sitemap.xml'
+  id: '__root__' | '/' | '/claim' | '/dashboard' | '/genesis' | '/sitemap.xml'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,10 +76,18 @@ export interface RootRouteChildren {
   ClaimRoute: typeof ClaimRoute
   DashboardRoute: typeof DashboardRoute
   GenesisRoute: typeof GenesisRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/genesis': {
       id: '/genesis'
       path: '/genesis'
@@ -107,6 +124,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClaimRoute: ClaimRoute,
   DashboardRoute: DashboardRoute,
   GenesisRoute: GenesisRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
