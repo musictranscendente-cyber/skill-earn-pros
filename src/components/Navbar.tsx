@@ -3,6 +3,7 @@ import { Logo } from "./Logo";
 import { WalletButton } from "./WalletButton";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 const links = [
   { to: "/", label: "Home" },
@@ -16,7 +17,7 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/5 bg-[#070B14]/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
-        <Link to="/" className="shrink-0">
+        <Link to="/" className="shrink-0 transition hover:opacity-80">
           <Logo />
         </Link>
         <nav className="hidden items-center gap-1 md:flex">
@@ -24,8 +25,11 @@ export function Navbar() {
             <Link
               key={l.to}
               to={l.to}
-              className="rounded-full px-4 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white"
-              activeProps={{ className: "rounded-full px-4 py-2 text-sm text-white bg-white/5" }}
+              className="relative rounded-full px-4 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white"
+              activeProps={{
+                className:
+                  "relative rounded-full px-4 py-2 text-sm text-white bg-gradient-to-r from-[var(--neon-purple)]/20 to-[var(--neon-blue)]/10 ring-1 ring-[var(--neon-purple)]/40 shadow-[0_0_16px_rgba(138,46,255,0.25)]",
+              }}
             >
               {l.label}
             </Link>
@@ -34,29 +38,53 @@ export function Navbar() {
         <div className="hidden md:block">
           <WalletButton />
         </div>
-        <button className="md:hidden text-white" onClick={() => setOpen(!open)} aria-label="menu">
-          {open ? <X /> : <Menu />}
+        <button
+          className="text-white transition hover:opacity-80 md:hidden"
+          onClick={() => setOpen(!open)}
+          aria-label="menu"
+        >
+          <motion.span
+            key={open ? "close" : "open"}
+            initial={{ rotate: -90, opacity: 0 }}
+            animate={{ rotate: 0, opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="flex"
+          >
+            {open ? <X /> : <Menu />}
+          </motion.span>
         </button>
       </div>
-      {open && (
-        <div className="border-t border-white/5 md:hidden">
-          <div className="mx-auto flex max-w-7xl flex-col gap-2 p-4">
-            {links.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                onClick={() => setOpen(false)}
-                className="rounded-xl px-4 py-3 text-sm text-white/80 hover:bg-white/5"
-              >
-                {l.label}
-              </Link>
-            ))}
-            <div className="pt-2">
-              <WalletButton />
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="overflow-hidden border-t border-white/5 md:hidden"
+          >
+            <div className="mx-auto flex max-w-7xl flex-col gap-2 p-4">
+              {links.map((l) => (
+                <Link
+                  key={l.to}
+                  to={l.to}
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl px-4 py-3 text-sm text-white/80 transition hover:bg-white/5"
+                  activeProps={{
+                    className:
+                      "rounded-xl px-4 py-3 text-sm text-white bg-gradient-to-r from-[var(--neon-purple)]/20 to-[var(--neon-blue)]/10 ring-1 ring-[var(--neon-purple)]/40",
+                  }}
+                >
+                  {l.label}
+                </Link>
+              ))}
+              <div className="pt-2">
+                <WalletButton />
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
