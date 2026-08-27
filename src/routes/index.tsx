@@ -49,7 +49,7 @@ function Hero() {
   const raised = 84_320;
   const pct = Math.min(100, (raised / GENESIS.hardCap) * 100);
   return (
-    <section className="relative overflow-hidden pt-16 pb-24 md:pt-24 md:pb-32">
+    <section className="relative overflow-hidden pt-20 pb-28 md:pt-32 md:pb-40">
       <GridBackground />
       <div className="relative mx-auto max-w-7xl px-6">
         <motion.div
@@ -58,7 +58,7 @@ function Hero() {
           variants={{ show: { transition: { staggerChildren: 0.08 } } }}
           className="mx-auto max-w-4xl text-center"
         >
-          <motion.div variants={fadeUp} className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/70">
+          <motion.div variants={fadeUp} className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/70">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--neon-purple)] opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--neon-purple)]" />
@@ -67,17 +67,17 @@ function Hero() {
           </motion.div>
           <motion.h1
             variants={fadeUp}
-            className="text-balance text-5xl font-extrabold leading-[1.05] tracking-tight md:text-7xl lg:text-[88px]"
+            className="text-balance text-5xl font-extrabold leading-[1.02] tracking-tighter md:text-7xl lg:text-[96px]"
           >
             <span className="text-silver">Where Skill</span>{" "}
-            <span className="text-gradient">Becomes Reward.</span>
+            <span className="text-gradient drop-shadow-[0_0_40px_rgba(138,46,255,0.35)]">Becomes Reward.</span>
           </motion.h1>
-          <motion.p variants={fadeUp} className="mx-auto mt-7 max-w-2xl text-pretty text-base text-white/65 md:text-lg">
+          <motion.p variants={fadeUp} className="mx-auto mt-8 max-w-2xl text-pretty text-base leading-relaxed text-white/65 md:text-lg md:leading-relaxed">
             PvP Pro is the world's most competitive skill-based gaming ecosystem. Compete in
             head-to-head PvP matches, build reputation, and own a piece of an economy fueled by
             real gameplay — not inflation.
           </motion.p>
-          <motion.div variants={fadeUp} className="mt-9 flex flex-wrap items-center justify-center gap-3">
+          <motion.div variants={fadeUp} className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <Link to="/genesis" className="btn-neon btn-neon-hover">
               <Flame className="h-4 w-4" /> Become a Founder
             </Link>
@@ -91,7 +91,7 @@ function Hero() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.7 }}
-          className="glass neon-border mx-auto mt-16 max-w-5xl rounded-3xl p-6 md:p-8"
+          className="glass neon-border mx-auto mt-20 max-w-5xl rounded-3xl p-6 md:p-8"
         >
           <div className="grid gap-6 md:grid-cols-4">
             <Stat label="Genesis Price" value="$0.002" sub="per PVP" />
@@ -126,7 +126,7 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
   return (
     <div>
       <div className="text-xs uppercase tracking-widest text-white/50">{label}</div>
-      <div className="text-silver mt-2 text-3xl font-bold tracking-tight">{value}</div>
+      <div className="text-silver mt-2 text-3xl font-bold tracking-tight md:text-4xl">{value}</div>
       {sub && <div className="mt-1 text-xs text-white/45">{sub}</div>}
     </div>
   );
