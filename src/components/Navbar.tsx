@@ -1,19 +1,21 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { WalletButton } from "./WalletButton";
+import { LanguageToggle } from "./LanguageToggle";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-
-const links = [
-  { to: "/", label: "Home" },
-  { to: "/genesis", label: "Genesis" },
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/claim", label: "Claim" },
-];
+import { useLang } from "@/lib/i18n";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const { t } = useLang();
+  const links = [
+    { to: "/", label: t("nav.home") },
+    { to: "/genesis", label: t("nav.genesis") },
+    { to: "/dashboard", label: t("nav.dashboard") },
+    { to: "/claim", label: t("nav.claim") },
+  ];
   return (
     <header className="sticky top-0 z-40 border-b border-white/5 bg-[#070B14]/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
@@ -35,7 +37,8 @@ export function Navbar() {
             </Link>
           ))}
         </nav>
-        <div className="hidden md:block">
+        <div className="hidden items-center gap-3 md:flex">
+          <LanguageToggle />
           <WalletButton />
         </div>
         <button
@@ -78,7 +81,8 @@ export function Navbar() {
                   {l.label}
                 </Link>
               ))}
-              <div className="pt-2">
+              <div className="flex items-center justify-between gap-3 pt-2">
+                <LanguageToggle />
                 <WalletButton />
               </div>
             </div>

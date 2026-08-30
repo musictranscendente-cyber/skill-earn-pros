@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { Github, FileText } from "lucide-react";
+import { useLang } from "@/lib/i18n";
 
 function SocialIcon({ label, children, href }: { label: string; href: string; children: React.ReactNode }) {
   return (
@@ -17,13 +18,14 @@ function SocialIcon({ label, children, href }: { label: string; href: string; ch
 }
 
 export function Footer() {
+  const { t } = useLang();
   return (
     <footer className="border-t border-white/5 bg-[#050811]/80 mt-32">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-14 md:grid-cols-4">
         <div className="md:col-span-2">
           <Logo />
           <p className="mt-4 max-w-sm text-sm text-white/60">
-            PvP Pro is the world's most competitive skill-based gaming ecosystem. Where skill becomes reward.
+            {t("footer.tagline")}
           </p>
           <div className="mt-5 flex gap-2">
             <SocialIcon label="Discord" href="#">
@@ -40,26 +42,26 @@ export function Footer() {
           </div>
         </div>
         <div>
-          <h4 className="mb-3 text-sm font-semibold text-white">Platform</h4>
+          <h4 className="mb-3 text-sm font-semibold text-white">{t("footer.platform")}</h4>
           <ul className="space-y-2 text-sm text-white/60">
-            <li><Link to="/genesis" className="hover:text-white">Genesis Sale</Link></li>
-            <li><Link to="/dashboard" className="hover:text-white">Founder Dashboard</Link></li>
-            <li><Link to="/claim" className="hover:text-white">Claim Portal</Link></li>
+            <li><Link to="/genesis" className="hover:text-white">{t("footer.genesis")}</Link></li>
+            <li><Link to="/dashboard" className="hover:text-white">{t("footer.dashboard")}</Link></li>
+            <li><Link to="/claim" className="hover:text-white">{t("footer.claim")}</Link></li>
           </ul>
         </div>
         <div>
-          <h4 className="mb-3 text-sm font-semibold text-white">Resources</h4>
+          <h4 className="mb-3 text-sm font-semibold text-white">{t("footer.resources")}</h4>
           <ul className="space-y-2 text-sm text-white/60">
-            <li><a href="#" className="hover:text-white">Whitepaper</a></li>
-            <li><a href="#faq" className="hover:text-white">FAQ</a></li>
-            <li><a href="#" className="hover:text-white">Brand Kit</a></li>
+            <li><a href="#" className="hover:text-white">{t("footer.whitepaper")}</a></li>
+            <li><a href="#faq" className="hover:text-white">{t("footer.faq")}</a></li>
+            <li><a href="#" className="hover:text-white">{t("footer.brandkit")}</a></li>
           </ul>
         </div>
       </div>
       <div className="border-t border-white/5">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-6 py-5 text-xs text-white/40 md:flex-row">
-          <span>© {new Date().getFullYear()} PvP Pro. All rights reserved.</span>
-          <span>Built on Base. Not financial advice.</span>
+          <span>© {new Date().getFullYear()} PvP Pro. {t("footer.rights")}</span>
+          <span>{t("footer.disclaimer")}</span>
         </div>
       </div>
     </footer>

@@ -9,6 +9,7 @@ import { Section } from "@/components/Section";
 import { GridBackground } from "@/components/Background";
 import { Countdown } from "@/components/Countdown";
 import { TIERS, GENESIS } from "@/lib/wallet";
+import { useLang } from "@/lib/i18n";
 import { useState } from "react";
 
 export const Route = createFileRoute("/")({
@@ -46,6 +47,7 @@ function Index() {
 }
 
 function Hero() {
+  const { t } = useLang();
   const raised = 84_320;
   const pct = Math.min(100, (raised / GENESIS.hardCap) * 100);
   return (
@@ -63,26 +65,24 @@ function Hero() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--neon-purple)] opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--neon-purple)]" />
             </span>
-            Genesis Sale is Live · Base Mainnet
+            {t("hero.badge")}
           </motion.div>
           <motion.h1
             variants={fadeUp}
             className="text-balance text-5xl font-extrabold leading-[1.02] tracking-tighter md:text-7xl lg:text-[96px]"
           >
-            <span className="text-silver">Where Skill</span>{" "}
-            <span className="text-gradient drop-shadow-[0_0_40px_rgba(138,46,255,0.35)]">Becomes Reward.</span>
+            <span className="text-silver">{t("hero.title1")}</span>{" "}
+            <span className="text-gradient drop-shadow-[0_0_40px_rgba(138,46,255,0.35)]">{t("hero.title2")}</span>
           </motion.h1>
           <motion.p variants={fadeUp} className="mx-auto mt-8 max-w-2xl text-pretty text-base leading-relaxed text-white/65 md:text-lg md:leading-relaxed">
-            PvP Pro is the world's most competitive skill-based gaming ecosystem. Compete in
-            head-to-head PvP matches, build reputation, and own a piece of an economy fueled by
-            real gameplay — not inflation.
+            {t("hero.subtitle")}
           </motion.p>
           <motion.div variants={fadeUp} className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <Link to="/genesis" className="btn-neon btn-neon-hover">
-              <Flame className="h-4 w-4" /> Become a Founder
+              <Flame className="h-4 w-4" /> {t("hero.cta.founder")}
             </Link>
             <a href="#" className="btn-ghost btn-ghost-hover">
-              <FileText className="h-4 w-4" /> Read Whitepaper
+              <FileText className="h-4 w-4" /> {t("hero.cta.whitepaper")}
             </a>
           </motion.div>
         </motion.div>
@@ -94,17 +94,17 @@ function Hero() {
           className="glass neon-border mx-auto mt-20 max-w-5xl rounded-3xl p-6 md:p-8"
         >
           <div className="grid gap-6 md:grid-cols-4">
-            <Stat label="Genesis Price" value="$0.002" sub="per PVP" />
-            <Stat label="Hard Cap" value="$200,000" sub="Genesis round" />
-            <Stat label="Raised" value={`$${raised.toLocaleString()}`} sub={`${pct.toFixed(1)}% of cap`} />
+            <Stat label={t("hero.stat.price")} value="$0.002" sub={t("hero.stat.price.sub")} />
+            <Stat label={t("hero.stat.cap")} value="$200,000" sub={t("hero.stat.cap.sub")} />
+            <Stat label={t("hero.stat.raised")} value={`$${raised.toLocaleString()}`} sub={`${pct.toFixed(1)}% ${t("hero.stat.raised.suffix")}`} />
             <div>
-              <div className="text-xs uppercase tracking-widest text-white/50">Launch In</div>
+              <div className="text-xs uppercase tracking-widest text-white/50">{t("hero.stat.launch")}</div>
               <div className="mt-2"><Countdown to={GENESIS.launchDate} /></div>
             </div>
           </div>
           <div className="mt-6">
             <div className="mb-2 flex items-center justify-between text-xs text-white/55">
-              <span>Progress</span>
+              <span>{t("hero.progress")}</span>
               <span>${raised.toLocaleString()} / ${GENESIS.hardCap.toLocaleString()}</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
@@ -133,14 +133,20 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
 }
 
 function Problem() {
+  const { t } = useLang();
   const items = [
-    { icon: TrendingUp, title: "Infinite inflation", desc: "Endless emissions dilute holders and crush long-term value." },
-    { icon: AlertTriangle, title: "Token dumping", desc: "Mercenary farmers extract liquidity and abandon projects in weeks." },
-    { icon: Coins, title: "No real economy", desc: "Revenue comes from new buyers, not from the product itself." },
-    { icon: Users, title: "Weak communities", desc: "No skin in the game means no loyalty when markets get hard." },
+    { icon: TrendingUp, title: t("problem.item1.title"), desc: t("problem.item1.desc") },
+    { icon: AlertTriangle, title: t("problem.item2.title"), desc: t("problem.item2.desc") },
+    { icon: Coins, title: t("problem.item3.title"), desc: t("problem.item3.desc") },
+    { icon: Users, title: t("problem.item4.title"), desc: t("problem.item4.desc") },
   ];
   return (
-    <Section id="problem" eyebrow="The Problem" title={<>Why traditional <span className="text-gradient">GameFi failed</span>.</>} subtitle="A generation of Play-to-Earn games collapsed because their economies depended on emissions, not on real player demand. PvP Pro starts from a different premise.">
+    <Section
+      id="problem"
+      eyebrow={t("problem.eyebrow")}
+      title={<>{t("problem.title1")} <span className="text-gradient">{t("problem.title2")}</span>.</>}
+      subtitle={t("problem.subtitle")}
+    >
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
         {items.map((it, i) => (
           <motion.div
@@ -167,16 +173,22 @@ function Problem() {
 }
 
 function Solution() {
+  const { t } = useLang();
   const pillars = [
-    { icon: Sword, title: "Skill-based", desc: "Every match has a real winner and a real loser. Skill is the only edge." },
-    { icon: ShieldCheck, title: "Treasury-driven", desc: "Gameplay fees fund a transparent treasury that backs the ecosystem." },
-    { icon: Users, title: "Community-driven", desc: "Founders shape decisions, propose tournaments and curate competitive seasons." },
-    { icon: Trophy, title: "Founder economy", desc: "Early supporters earn lifetime status, revenue share and exclusive access." },
-    { icon: Coins, title: "Gameplay revenue", desc: "Real users paying for competitive matches is the only sustainable engine." },
-    { icon: Zap, title: "Buyback flywheel", desc: "Treasury executes systematic PVP buybacks as matches scale." },
+    { icon: Sword, title: t("solution.item1.title"), desc: t("solution.item1.desc") },
+    { icon: ShieldCheck, title: t("solution.item2.title"), desc: t("solution.item2.desc") },
+    { icon: Users, title: t("solution.item3.title"), desc: t("solution.item3.desc") },
+    { icon: Trophy, title: t("solution.item4.title"), desc: t("solution.item4.desc") },
+    { icon: Coins, title: t("solution.item5.title"), desc: t("solution.item5.desc") },
+    { icon: Zap, title: t("solution.item6.title"), desc: t("solution.item6.desc") },
   ];
   return (
-    <Section id="solution" eyebrow="The Solution" title={<>An economy where <span className="text-gradient">skill is the asset</span>.</>} subtitle="PvP Pro replaces emissions with real demand. Players pay to compete. Winners earn. The treasury captures value and recycles it back into the ecosystem.">
+    <Section
+      id="solution"
+      eyebrow={t("solution.eyebrow")}
+      title={<>{t("solution.title1")} <span className="text-gradient">{t("solution.title2")}</span>.</>}
+      subtitle={t("solution.subtitle")}
+    >
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         {pillars.map((p, i) => (
           <motion.div
@@ -200,17 +212,23 @@ function Solution() {
 }
 
 function Economy() {
+  const { t } = useLang();
   const flow = [
-    { label: "Player A", desc: "Pays match fee", icon: Sword },
-    { label: "Player B", desc: "Pays match fee", icon: Sword },
-    { label: "PvP Match", desc: "Skill-based duel", icon: Zap },
-    { label: "Winner", desc: "Takes the pot", icon: Trophy },
-    { label: "Treasury", desc: "Captures protocol fee", icon: ShieldCheck },
-    { label: "Buyback", desc: "Removes PVP from market", icon: Coins },
-    { label: "Ecosystem", desc: "Funds growth & rewards", icon: Rocket },
+    { label: t("economy.step1.label"), desc: t("economy.step1.desc"), icon: Sword },
+    { label: t("economy.step2.label"), desc: t("economy.step2.desc"), icon: Sword },
+    { label: t("economy.step3.label"), desc: t("economy.step3.desc"), icon: Zap },
+    { label: t("economy.step4.label"), desc: t("economy.step4.desc"), icon: Trophy },
+    { label: t("economy.step5.label"), desc: t("economy.step5.desc"), icon: ShieldCheck },
+    { label: t("economy.step6.label"), desc: t("economy.step6.desc"), icon: Coins },
+    { label: t("economy.step7.label"), desc: t("economy.step7.desc"), icon: Rocket },
   ];
   return (
-    <Section id="economy" eyebrow="Gameplay Economy" title={<>How value <span className="text-gradient">actually flows</span>.</>} subtitle="A closed loop where every match strengthens the treasury and every treasury action reinforces competitive demand.">
+    <Section
+      id="economy"
+      eyebrow={t("economy.eyebrow")}
+      title={<>{t("economy.title1")} <span className="text-gradient">{t("economy.title2")}</span>.</>}
+      subtitle={t("economy.subtitle")}
+    >
       <div className="glass neon-border rounded-3xl p-6 md:p-10">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-7">
           {flow.map((step, i) => (
@@ -246,13 +264,14 @@ function Economy() {
 }
 
 function Tokenomics() {
+  const { t } = useLang();
   const allocations = [
-    { label: "Ecosystem & Rewards", pct: 35, color: "#8A2EFF" },
-    { label: "Treasury", pct: 20, color: "#00B2FF" },
-    { label: "Team & Advisors", pct: 15, color: "#A45BFF" },
-    { label: "Liquidity", pct: 12, color: "#5B8DEF" },
-    { label: "Genesis Sale", pct: 10, color: "#C28BFF" },
-    { label: "Community Grants", pct: 8, color: "#65DDFF" },
+    { label: t("tokenomics.alloc1"), pct: 35, color: "#8A2EFF" },
+    { label: t("tokenomics.alloc2"), pct: 20, color: "#00B2FF" },
+    { label: t("tokenomics.alloc3"), pct: 15, color: "#A45BFF" },
+    { label: t("tokenomics.alloc4"), pct: 12, color: "#5B8DEF" },
+    { label: t("tokenomics.alloc5"), pct: 10, color: "#C28BFF" },
+    { label: t("tokenomics.alloc6"), pct: 8, color: "#65DDFF" },
   ];
   // Build conic gradient
   let acc = 0;
@@ -265,13 +284,18 @@ function Tokenomics() {
     .join(", ");
 
   return (
-    <Section id="tokenomics" eyebrow="Tokenomics" title={<>The <span className="text-gradient">PVP token</span>.</>} subtitle="A fixed supply utility token that powers the competitive layer — not a Ponzi yield instrument.">
+    <Section
+      id="tokenomics"
+      eyebrow={t("tokenomics.eyebrow")}
+      title={<>{t("tokenomics.title1")} <span className="text-gradient">{t("tokenomics.title2")}</span>.</>}
+      subtitle={t("tokenomics.subtitle")}
+    >
       <div className="grid items-center gap-10 md:grid-cols-2">
         <div className="grid grid-cols-2 gap-4">
-          <Card label="Total Supply" value="1,000,000,000" sub="PVP" />
-          <Card label="Genesis Price" value="$0.002" sub="per PVP" />
-          <Card label="Genesis Allocation" value="100,000,000" sub="10% of supply" />
-          <Card label="Network" value="Base" sub="Mainnet" />
+          <Card label={t("tokenomics.supply")} value="1,000,000,000" sub="PVP" />
+          <Card label={t("tokenomics.price")} value="$0.002" sub={t("tokenomics.price.sub")} />
+          <Card label={t("tokenomics.allocation")} value="100,000,000" sub={t("tokenomics.allocation.sub")} />
+          <Card label={t("tokenomics.network")} value="Base" sub={t("tokenomics.network.sub")} />
         </div>
         <div className="glass relative flex items-center justify-center rounded-3xl p-8">
           <div
@@ -279,7 +303,7 @@ function Tokenomics() {
             style={{ background: `conic-gradient(${conic})` }}
           >
             <div className="absolute inset-6 flex flex-col items-center justify-center rounded-full bg-[#0b1020] ring-1 ring-white/10">
-              <div className="text-xs uppercase tracking-widest text-white/50">Supply</div>
+              <div className="text-xs uppercase tracking-widest text-white/50">{t("tokenomics.center.label")}</div>
               <div className="text-silver text-2xl font-bold">1B PVP</div>
             </div>
           </div>
@@ -309,15 +333,21 @@ function Card({ label, value, sub }: { label: string; value: string; sub?: strin
 }
 
 function Tiers() {
+  const { t } = useLang();
   return (
-    <Section id="tiers" eyebrow="Founder Tiers" title={<>Choose your <span className="text-gradient">founder rank</span>.</>} subtitle="Every founder tier unlocks lifetime benefits: exclusive tournaments, governance weight, and early access to seasons.">
+    <Section
+      id="tiers"
+      eyebrow={t("tiers.eyebrow")}
+      title={<>{t("tiers.title1")} <span className="text-gradient">{t("tiers.title2")}</span>.</>}
+      subtitle={t("tiers.subtitle")}
+    >
       <div className="grid gap-5 md:grid-cols-3 lg:grid-cols-5">
-        {TIERS.map((t, i) => {
-          const featured = t.name === "Gold";
-          const pvp = (t.min / 0.002).toLocaleString();
+        {TIERS.map((tItem, i) => {
+          const featured = tItem.name === "Gold";
+          const pvp = (tItem.min / 0.002).toLocaleString();
           return (
             <motion.div
-              key={t.name}
+              key={tItem.name}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -326,30 +356,30 @@ function Tiers() {
             >
               {featured && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[var(--neon-purple)] to-[var(--neon-blue)] px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
-                  Most Popular
+                  {t("tiers.featured.badge")}
                 </div>
               )}
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">{t.name}</h3>
-                <span className="h-2 w-2 rounded-full" style={{ background: t.color, boxShadow: `0 0 12px ${t.color}` }} />
+                <h3 className="text-lg font-semibold">{tItem.name}</h3>
+                <span className="h-2 w-2 rounded-full" style={{ background: tItem.color, boxShadow: `0 0 12px ${tItem.color}` }} />
               </div>
               <div className="mt-5">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-silver text-4xl font-extrabold">${t.min}</span>
+                  <span className="text-silver text-4xl font-extrabold">${tItem.min}</span>
                   <span className="text-xs text-white/40">USDC</span>
                 </div>
                 <div className="mt-1 text-sm text-[var(--neon-blue)]">{pvp} PVP</div>
               </div>
               <ul className="mt-5 space-y-2 text-sm text-white/65">
-                <li>• Founder NFT (Season 0)</li>
-                <li>• Lifetime tier badge</li>
-                <li>• Tournament access</li>
-                {t.min >= 250 && <li>• Governance weight</li>}
-                {t.min >= 500 && <li>• Revenue share allocation</li>}
-                {t.min >= 1000 && <li>• Founders council seat</li>}
+                <li>• {t("tiers.benefit.nft")}</li>
+                <li>• {t("tiers.benefit.badge")}</li>
+                <li>• {t("tiers.benefit.tournament")}</li>
+                {tItem.min >= 250 && <li>• {t("tiers.benefit.governance")}</li>}
+                {tItem.min >= 500 && <li>• {t("tiers.benefit.revshare")}</li>}
+                {tItem.min >= 1000 && <li>• {t("tiers.benefit.council")}</li>}
               </ul>
               <Link to="/genesis" className={`mt-6 block rounded-full py-2.5 text-center text-sm font-semibold ${featured ? "btn-neon btn-neon-hover" : "btn-ghost btn-ghost-hover"}`}>
-                Reserve {t.name}
+                {t("tiers.reserve")} {tItem.name}
               </Link>
             </motion.div>
           );
@@ -360,15 +390,21 @@ function Tiers() {
 }
 
 function Roadmap() {
+  const { t } = useLang();
   const phases = [
-    { phase: "Phase 1", title: "Foundation", items: ["Brand", "Whitepaper", "Community", "Genesis"], status: "Live" },
-    { phase: "Phase 2", title: "Infrastructure", items: ["Token", "Contracts", "Dashboard"], status: "In progress" },
-    { phase: "Phase 3", title: "PvP Platform MVP", items: ["Matchmaking", "First competitive game", "Treasury wired"], status: "Q2" },
-    { phase: "Phase 4", title: "Competitive Expansion", items: ["New titles", "Tournaments", "Streamer program"], status: "Q3" },
-    { phase: "Phase 5", title: "Governance & NFTs", items: ["Founder NFTs", "On-chain voting", "Season DAOs"], status: "Q4+" },
+    { phase: "Phase 1", title: t("roadmap.p1.title"), items: [t("roadmap.p1.i1"), t("roadmap.p1.i2"), t("roadmap.p1.i3"), t("roadmap.p1.i4")], status: t("roadmap.p1.status") },
+    { phase: "Phase 2", title: t("roadmap.p2.title"), items: [t("roadmap.p2.i1"), t("roadmap.p2.i2"), t("roadmap.p2.i3")], status: t("roadmap.p2.status") },
+    { phase: "Phase 3", title: t("roadmap.p3.title"), items: [t("roadmap.p3.i1"), t("roadmap.p3.i2"), t("roadmap.p3.i3")], status: t("roadmap.p3.status") },
+    { phase: "Phase 4", title: t("roadmap.p4.title"), items: [t("roadmap.p4.i1"), t("roadmap.p4.i2"), t("roadmap.p4.i3")], status: t("roadmap.p4.status") },
+    { phase: "Phase 5", title: t("roadmap.p5.title"), items: [t("roadmap.p5.i1"), t("roadmap.p5.i2"), t("roadmap.p5.i3")], status: t("roadmap.p5.status") },
   ];
   return (
-    <Section id="roadmap" eyebrow="Roadmap" title={<>Built in <span className="text-gradient">competitive seasons</span>.</>} subtitle="A staged path from genesis to a fully governed competitive economy.">
+    <Section
+      id="roadmap"
+      eyebrow={t("roadmap.eyebrow")}
+      title={<>{t("roadmap.title1")} <span className="text-gradient">{t("roadmap.title2")}</span>.</>}
+      subtitle={t("roadmap.subtitle")}
+    >
       <div className="relative">
         <div className="absolute left-4 top-0 hidden h-full w-px bg-gradient-to-b from-[var(--neon-purple)]/60 via-[var(--neon-blue)]/30 to-transparent md:block" />
         <div className="space-y-6">
@@ -407,17 +443,18 @@ function Roadmap() {
 }
 
 function FAQ() {
+  const { t } = useLang();
   const items = [
-    { q: "Is PvP Pro a Play-to-Earn game?", a: "No. PvP Pro is skill-based PvP. Earnings come from winning matches against other players — never from emissions or inflationary rewards." },
-    { q: "What backs the PVP token?", a: "Real protocol revenue from competitive matches funds a transparent treasury that executes systematic buybacks." },
-    { q: "Who can become a Founder?", a: "Anyone participating in the Genesis Sale. Founders receive a lifetime tier badge, NFT, and tier-based benefits." },
-    { q: "Which network is PvP Pro built on?", a: "PvP Pro launches on Base Mainnet for low fees, fast finality, and broad wallet support." },
-    { q: "When will the token be claimable?", a: "Claim opens at TGE, after the Genesis Sale completes and contracts are independently audited." },
-    { q: "How do I connect my wallet?", a: "Use the Connect Wallet button. MetaMask, Coinbase Wallet, and WalletConnect are supported." },
+    { q: t("faq.q1"), a: t("faq.a1") },
+    { q: t("faq.q2"), a: t("faq.a2") },
+    { q: t("faq.q3"), a: t("faq.a3") },
+    { q: t("faq.q4"), a: t("faq.a4") },
+    { q: t("faq.q5"), a: t("faq.a5") },
+    { q: t("faq.q6"), a: t("faq.a6") },
   ];
   const [open, setOpen] = useState<number | null>(0);
   return (
-    <Section id="faq" eyebrow="FAQ" title={<>Questions, <span className="text-gradient">answered</span>.</>}>
+    <Section id="faq" eyebrow={t("faq.eyebrow")} title={<>{t("faq.title1")} <span className="text-gradient">{t("faq.title2")}</span>.</>}>
       <div className="mx-auto max-w-3xl space-y-3">
         {items.map((it, i) => (
           <div key={it.q} className="glass overflow-hidden rounded-2xl">

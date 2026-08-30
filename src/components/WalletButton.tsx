@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wallet, X, Check, Copy } from "lucide-react";
 import { useWallet, shortAddr } from "@/lib/wallet";
+import { useLang } from "@/lib/i18n";
 
 const PROVIDERS = [
   { id: "metamask", name: "MetaMask", emoji: "🦊" },
@@ -11,6 +12,7 @@ const PROVIDERS = [
 
 export function WalletButton() {
   const { address, connect, connecting, disconnect } = useWallet();
+  const { t } = useLang();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -34,7 +36,7 @@ export function WalletButton() {
           }}
           className="ml-1 cursor-pointer rounded-full p-1 opacity-50 hover:opacity-100"
           role="button"
-          aria-label="Disconnect"
+          aria-label={t("wallet.disconnect")}
         >
           <X className="h-3.5 w-3.5" />
         </span>
@@ -46,7 +48,7 @@ export function WalletButton() {
     <>
       <button onClick={() => setOpen(true)} className="btn-neon btn-neon-hover text-sm">
         <Wallet className="h-4 w-4" />
-        Connect Wallet
+        {t("wallet.connect")}
       </button>
       <AnimatePresence>
         {open && (
@@ -65,12 +67,12 @@ export function WalletButton() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-1 flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Connect a wallet</h3>
+                <h3 className="text-lg font-semibold">{t("wallet.modal.title")}</h3>
                 <button onClick={() => setOpen(false)} className="text-white/50 hover:text-white">
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <p className="mb-5 text-sm text-white/60">Connect on Base Mainnet to access your founder dashboard.</p>
+              <p className="mb-5 text-sm text-white/60">{t("wallet.modal.desc")}</p>
               <div className="space-y-2">
                 {PROVIDERS.map((p) => (
                   <button
@@ -87,13 +89,13 @@ export function WalletButton() {
                       <span className="font-medium">{p.name}</span>
                     </span>
                     <span className="text-xs text-white/40">
-                      {connecting ? "Connecting…" : "Detected"}
+                      {connecting ? t("wallet.connecting") : t("wallet.detected")}
                     </span>
                   </button>
                 ))}
               </div>
               <p className="mt-5 text-center text-xs text-white/40">
-                Demo session — your address is locally generated for preview.
+                {t("wallet.demo.note")}
               </p>
             </motion.div>
           </motion.div>
