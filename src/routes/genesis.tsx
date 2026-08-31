@@ -32,7 +32,7 @@ function GenesisPage() {
   const [amount, setAmount] = useState(250);
   const tier = tierFor(amount);
   const pvp = Math.floor(amount / GENESIS.price);
-  const raised = 84_320;
+  const raised = 3_247_891.63;
   const pct = Math.min(100, (raised / GENESIS.hardCap) * 100);
 
   function submit() {

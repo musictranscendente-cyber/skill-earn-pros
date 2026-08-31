@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClaimRouteImport } from './routes/claim'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as GenesisRouteImport } from './routes/genesis'
+import { Route as PlayRouteImport } from './routes/play'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const GenesisRoute = GenesisRouteImport.update({
   path: '/genesis',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlayRoute = PlayRouteImport.update({
+  id: '/play',
+  path: '/play',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/claim': typeof ClaimRoute
   '/dashboard': typeof DashboardRoute
   '/genesis': typeof GenesisRoute
+  '/play': typeof PlayRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/claim': typeof ClaimRoute
   '/dashboard': typeof DashboardRoute
   '/genesis': typeof GenesisRoute
+  '/play': typeof PlayRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRoutesById {
@@ -61,14 +69,23 @@ export interface FileRoutesById {
   '/claim': typeof ClaimRoute
   '/dashboard': typeof DashboardRoute
   '/genesis': typeof GenesisRoute
+  '/play': typeof PlayRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/claim' | '/dashboard' | '/genesis' | '/sitemap.xml'
+  fullPaths:
+    '/' | '/claim' | '/dashboard' | '/genesis' | '/play' | '/sitemap.xml'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/claim' | '/dashboard' | '/genesis' | '/sitemap.xml'
-  id: '__root__' | '/' | '/claim' | '/dashboard' | '/genesis' | '/sitemap.xml'
+  to: '/' | '/claim' | '/dashboard' | '/genesis' | '/play' | '/sitemap.xml'
+  id:
+    | '__root__'
+    | '/'
+    | '/claim'
+    | '/dashboard'
+    | '/genesis'
+    | '/play'
+    | '/sitemap.xml'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,6 +93,7 @@ export interface RootRouteChildren {
   ClaimRoute: typeof ClaimRoute
   DashboardRoute: typeof DashboardRoute
   GenesisRoute: typeof GenesisRoute
+  PlayRoute: typeof PlayRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
@@ -109,6 +127,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GenesisRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/play': {
+      id: '/play'
+      path: '/play'
+      fullPath: '/play'
+      preLoaderRoute: typeof PlayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -124,6 +149,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClaimRoute: ClaimRoute,
   DashboardRoute: DashboardRoute,
   GenesisRoute: GenesisRoute,
+  PlayRoute: PlayRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport

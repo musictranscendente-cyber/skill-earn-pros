@@ -101,7 +101,7 @@ export function shortAddr(a: string) {
 
 export const GENESIS = {
   price: 0.002,
-  hardCap: 200_000,
+  hardCap: 10_000_000,
   genesisAllocation: 100_000_000,
   supply: 1_000_000_000,
   launchDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 45).toISOString(),

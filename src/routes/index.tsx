@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import {
   Sword, Trophy, Coins, Users, ShieldCheck, Zap, TrendingUp, AlertTriangle,
   Flame, Rocket, ArrowRight, ArrowDown, FileText, ChevronDown,
+  type LucideIcon,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { Section } from "@/components/Section";
@@ -48,42 +49,60 @@ function Index() {
 
 function Hero() {
   const { t } = useLang();
-  const raised = 84_320;
+  const raised = 3_247_891.63;
   const pct = Math.min(100, (raised / GENESIS.hardCap) * 100);
+  const [videoReady, setVideoReady] = useState(false);
   return (
-    <section className="relative overflow-hidden pt-20 pb-28 md:pt-32 md:pb-40">
+    <section className="relative overflow-hidden pt-20 pb-14 md:pt-32 md:pb-20">
       <GridBackground />
       <div className="relative mx-auto max-w-7xl px-6">
         <motion.div
           initial="hidden"
           animate="show"
           variants={{ show: { transition: { staggerChildren: 0.08 } } }}
-          className="mx-auto max-w-4xl text-center"
+          className="grid items-center gap-12 lg:grid-cols-[1.15fr_1fr] lg:gap-8"
         >
-          <motion.div variants={fadeUp} className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/70">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--neon-purple)] opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--neon-purple)]" />
-            </span>
-            {t("hero.badge")}
-          </motion.div>
-          <motion.h1
-            variants={fadeUp}
-            className="text-balance text-5xl font-extrabold leading-[1.02] tracking-tighter md:text-7xl lg:text-[96px]"
-          >
-            <span className="text-silver">{t("hero.title1")}</span>{" "}
-            <span className="text-gradient drop-shadow-[0_0_40px_rgba(138,46,255,0.35)]">{t("hero.title2")}</span>
-          </motion.h1>
-          <motion.p variants={fadeUp} className="mx-auto mt-8 max-w-2xl text-pretty text-base leading-relaxed text-white/65 md:text-lg md:leading-relaxed">
-            {t("hero.subtitle")}
-          </motion.p>
-          <motion.div variants={fadeUp} className="mt-10 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/genesis" className="btn-neon btn-neon-hover">
-              <Flame className="h-4 w-4" /> {t("hero.cta.founder")}
-            </Link>
-            <a href="#" className="btn-ghost btn-ghost-hover">
-              <FileText className="h-4 w-4" /> {t("hero.cta.whitepaper")}
-            </a>
+          <div className="mx-auto max-w-2xl text-center lg:mx-0 lg:max-w-none lg:text-left">
+            <motion.div variants={fadeUp} className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/70 lg:mx-0">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--neon-purple)] opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--neon-purple)]" />
+              </span>
+              {t("hero.badge")}
+            </motion.div>
+            <motion.h1
+              variants={fadeUp}
+              className="text-balance text-5xl font-extrabold leading-[1.02] tracking-tighter md:text-6xl lg:text-7xl"
+            >
+              <span className="text-silver">{t("hero.title1")}</span>{" "}
+              <span className="text-gradient drop-shadow-[0_0_40px_rgba(138,46,255,0.35)]">{t("hero.title2")}</span>
+            </motion.h1>
+            <motion.p variants={fadeUp} className="mx-auto mt-8 max-w-2xl text-pretty text-base leading-relaxed text-white/65 md:text-lg md:leading-relaxed lg:mx-0">
+              {t("hero.subtitle")}
+            </motion.p>
+            <motion.div variants={fadeUp} className="mt-10 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+              <Link to="/genesis" className="btn-neon btn-neon-hover">
+                <Flame className="h-4 w-4" /> {t("hero.cta.founder")}
+              </Link>
+              <a href="#" className="btn-ghost btn-ghost-hover">
+                <FileText className="h-4 w-4" /> {t("hero.cta.whitepaper")}
+              </a>
+            </motion.div>
+          </div>
+
+          <motion.div variants={fadeUp} className="relative mx-auto flex h-72 w-72 items-center justify-center sm:h-96 sm:w-96 lg:h-[460px] lg:w-[460px]">
+            <div aria-hidden className="absolute inset-0 rounded-full bg-[radial-gradient(closest-side,rgba(138,46,255,0.4),transparent_70%)] blur-3xl" />
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              onLoadedData={() => setVideoReady(true)}
+              className={`relative h-full w-full object-contain transition-opacity duration-500 ${videoReady ? "opacity-100" : "opacity-0"}`}
+            >
+              <source src="/logo-spin-alpha.webm" type="video/webm" />
+              <source src="/logo-spin.mp4" type="video/mp4" />
+            </video>
           </motion.div>
         </motion.div>
 
@@ -91,11 +110,11 @@ function Hero() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.7 }}
-          className="glass neon-border mx-auto mt-20 max-w-5xl rounded-3xl p-6 md:p-8"
+          className="glass neon-border mx-auto mt-16 max-w-5xl rounded-3xl p-6 md:p-8"
         >
-          <div className="grid gap-6 md:grid-cols-4">
+          <div className="flex flex-wrap gap-x-8 gap-y-6">
             <Stat label={t("hero.stat.price")} value="$0.002" sub={t("hero.stat.price.sub")} />
-            <Stat label={t("hero.stat.cap")} value="$200,000" sub={t("hero.stat.cap.sub")} />
+            <Stat label={t("hero.stat.cap")} value={`$${GENESIS.hardCap.toLocaleString()}`} sub={t("hero.stat.cap.sub")} />
             <Stat label={t("hero.stat.raised")} value={`$${raised.toLocaleString()}`} sub={`${pct.toFixed(1)}% ${t("hero.stat.raised.suffix")}`} />
             <div>
               <div className="text-xs uppercase tracking-widest text-white/50">{t("hero.stat.launch")}</div>
@@ -122,12 +141,72 @@ function Hero() {
   );
 }
 
+const BRAND_ACCENTS = ["#8A2EFF", "#00B2FF", "#C13BFF", "#00E0FF", "#A45BFF", "#3DD9FF"];
+const PROBLEM_ACCENTS = ["#FB7185", "#FB923C", "#F472B6", "#FBBF24"];
+const ECONOMY_ACCENTS = ["#00B2FF", "#22D3EE", "#8A2EFF", "#38BDF8", "#A45BFF", "#0EA5E9", "#C13BFF"];
+const HEX_CLIP = "polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0% 50%)";
+
+function IconBadge({
+  icon: Icon,
+  size = "md",
+  color,
+  shape = "circle",
+  spin = false,
+}: {
+  icon: LucideIcon;
+  size?: "sm" | "md" | "lg";
+  color?: string;
+  shape?: "circle" | "hex" | "square";
+  spin?: boolean;
+}) {
+  const box = size === "lg" ? "h-24 w-24" : size === "sm" ? "h-16 w-16" : "h-20 w-20";
+  const iconSize = size === "lg" ? "h-10 w-10" : size === "sm" ? "h-7 w-7" : "h-8 w-8";
+  const c = color ?? BRAND_ACCENTS[0];
+  const coreRadius = shape === "square" ? "rounded-2xl" : shape === "circle" ? "rounded-full" : "";
+
+  return (
+    <div className={`relative shrink-0 ${box}`}>
+      {/* glow — steady pulse for circle/square, an irregular "warning flicker" for hex */}
+      <motion.div
+        aria-hidden
+        animate={
+          shape === "hex"
+            ? { opacity: [0.4, 1, 0.5, 0.9, 0.4], scale: [0.95, 1.1, 1, 1.15, 0.95] }
+            : { opacity: [0.55, 1, 0.55], scale: [0.95, 1.2, 0.95] }
+        }
+        transition={{ duration: shape === "hex" ? 1.8 : 2.6, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute -inset-3 rounded-full blur-xl"
+        style={{ background: `radial-gradient(closest-side, ${c}, transparent 72%)` }}
+      />
+      {/* spinning neon ring — only the "hero" circular treatment gets this */}
+      {spin && (
+        <motion.div
+          aria-hidden
+          animate={{ rotate: 360 }}
+          transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-0 rounded-full p-[2.5px]"
+          style={{ background: `conic-gradient(from 0deg, ${c}, transparent 35%, transparent 65%, ${c} 100%)` }}
+        >
+          <div className="h-full w-full rounded-full bg-[#0b1020]" />
+        </motion.div>
+      )}
+      {/* core */}
+      <div
+        className={`relative flex ${box} items-center justify-center ${coreRadius} ${spin || shape === "hex" ? "" : "ring-1 ring-white/10"} transition duration-300 group-hover:scale-110`}
+        style={{ background: `linear-gradient(135deg, ${c}66, ${c}1a)`, clipPath: shape === "hex" ? HEX_CLIP : undefined }}
+      >
+        <Icon className={iconSize} style={{ color: c, filter: `drop-shadow(0 0 12px ${c})` }} />
+      </div>
+    </div>
+  );
+}
+
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div>
       <div className="text-xs uppercase tracking-widest text-white/50">{label}</div>
-      <div className="text-silver mt-2 text-3xl font-bold tracking-tight md:text-4xl">{value}</div>
-      {sub && <div className="mt-1 text-xs text-white/45">{sub}</div>}
+      <div className="text-silver mt-2 whitespace-nowrap text-2xl font-bold tracking-tight md:text-3xl">{value}</div>
+      {sub && <div className="mt-1 whitespace-nowrap text-xs text-white/45">{sub}</div>}
     </div>
   );
 }
@@ -159,8 +238,8 @@ function Problem() {
           >
             <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[var(--neon-purple)]/10 blur-2xl transition group-hover:bg-[var(--neon-purple)]/30" />
             <div className="relative">
-              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-white/[0.04] text-[var(--neon-purple)]">
-                <it.icon className="h-5 w-5" />
+              <div className="mb-4">
+                <IconBadge icon={it.icon} size="md" shape="hex" color={PROBLEM_ACCENTS[i % PROBLEM_ACCENTS.length]} />
               </div>
               <h3 className="text-lg font-semibold">{it.title}</h3>
               <p className="mt-2 text-sm text-white/55">{it.desc}</p>
@@ -197,12 +276,13 @@ function Solution() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.5, delay: i * 0.06 }}
-            className="glass relative rounded-2xl p-6 transition hover:-translate-y-1 hover:border-[var(--neon-purple)]/40"
+            className="glass group relative overflow-hidden rounded-2xl p-6 transition hover:-translate-y-1 hover:border-[var(--neon-purple)]/40"
           >
-            <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--neon-purple)]/30 to-[var(--neon-blue)]/20 text-white">
-              <p.icon className="h-5 w-5" />
+            <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[var(--neon-blue)]/10 blur-2xl transition group-hover:bg-[var(--neon-blue)]/30" />
+            <div className="relative mb-4">
+              <IconBadge icon={p.icon} size="md" spin color={BRAND_ACCENTS[i % BRAND_ACCENTS.length]} />
             </div>
-            <h3 className="text-lg font-semibold">{p.title}</h3>
+            <h3 className="relative text-lg font-semibold">{p.title}</h3>
             <p className="mt-2 text-sm text-white/55">{p.desc}</p>
           </motion.div>
         ))}
@@ -230,7 +310,16 @@ function Economy() {
       subtitle={t("economy.subtitle")}
     >
       <div className="glass neon-border rounded-3xl p-6 md:p-10">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-7">
+        <div className="relative grid grid-cols-1 gap-4 md:grid-cols-7">
+          {/* baseline current track + a traveling spark, reinforcing "value flowing through the system" */}
+          <div className="absolute left-8 right-8 top-8 hidden h-px bg-gradient-to-r from-transparent via-white/15 to-transparent md:block" />
+          <motion.div
+            aria-hidden
+            animate={{ left: ["3%", "97%"] }}
+            transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-8 hidden h-2 w-2 -translate-y-1/2 rounded-full md:block"
+            style={{ background: "var(--neon-blue)", boxShadow: "0 0 14px 3px rgba(0,178,255,0.85)" }}
+          />
           {flow.map((step, i) => (
             <motion.div
               key={step.label}
@@ -238,11 +327,9 @@ function Economy() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.45, delay: i * 0.07 }}
-              className="relative flex flex-col items-center text-center"
+              className="group relative flex flex-col items-center text-center"
             >
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--neon-purple)]/30 to-[var(--neon-blue)]/30 ring-1 ring-white/10">
-                <step.icon className="h-6 w-6 text-white" />
-              </div>
+              <IconBadge icon={step.icon} size="sm" shape="square" color={ECONOMY_ACCENTS[i % ECONOMY_ACCENTS.length]} />
               <div className="mt-3 text-sm font-semibold">{step.label}</div>
               <div className="text-xs text-white/45">{step.desc}</div>
               {i < flow.length - 1 && (
@@ -290,16 +377,39 @@ function Tokenomics() {
       title={<>{t("tokenomics.title1")} <span className="text-gradient">{t("tokenomics.title2")}</span>.</>}
       subtitle={t("tokenomics.subtitle")}
     >
-      <div className="grid items-center gap-10 md:grid-cols-2">
-        <div className="grid grid-cols-2 gap-4">
+      <div className="grid items-center gap-10 lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
+        <div className="order-2 grid grid-cols-2 gap-4 lg:order-1">
           <Card label={t("tokenomics.supply")} value="1,000,000,000" sub="PVP" />
           <Card label={t("tokenomics.price")} value="$0.002" sub={t("tokenomics.price.sub")} />
           <Card label={t("tokenomics.allocation")} value="100,000,000" sub={t("tokenomics.allocation.sub")} />
           <Card label={t("tokenomics.network")} value="Base" sub={t("tokenomics.network.sub")} />
         </div>
-        <div className="glass relative flex items-center justify-center rounded-3xl p-8">
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.55, rotate: -18 }}
+          whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+          className="relative order-1 mx-auto flex h-56 w-56 items-center justify-center sm:h-64 sm:w-64 lg:order-2 lg:h-72 lg:w-72"
+        >
+          <motion.div
+            aria-hidden
+            animate={{ opacity: [0.7, 1, 0.7] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute inset-0 rounded-full bg-[radial-gradient(closest-side,rgba(0,178,255,0.35),transparent_70%)] blur-3xl"
+          />
+          <motion.img
+            src="/pvp-coin.webp"
+            alt="PVP Token"
+            animate={{ y: [0, -12, 0] }}
+            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+            className="relative h-full w-full object-contain drop-shadow-[0_0_50px_rgba(138,46,255,0.35)]"
+          />
+        </motion.div>
+
+        <div className="glass order-3 flex flex-col items-center gap-8 rounded-3xl p-8">
           <div
-            className="relative h-64 w-64 rounded-full"
+            className="relative h-64 w-64 shrink-0 rounded-full"
             style={{ background: `conic-gradient(${conic})` }}
           >
             <div className="absolute inset-6 flex flex-col items-center justify-center rounded-full bg-[#0b1020] ring-1 ring-white/10">
@@ -307,12 +417,12 @@ function Tokenomics() {
               <div className="text-silver text-2xl font-bold">1B PVP</div>
             </div>
           </div>
-          <div className="absolute -bottom-2 left-0 right-0 mx-auto grid max-w-md grid-cols-2 gap-x-4 gap-y-2 px-6 text-xs">
+          <div className="grid w-full max-w-md grid-cols-1 gap-x-6 gap-y-3 text-xs sm:grid-cols-2">
             {allocations.map((a) => (
-              <div key={a.label} className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-sm" style={{ background: a.color }} />
+              <div key={a.label} className="grid grid-cols-[10px_1fr_auto] items-start gap-x-2">
+                <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: a.color }} />
                 <span className="text-white/70">{a.label}</span>
-                <span className="ml-auto text-white/40">{a.pct}%</span>
+                <span className="pl-2 text-white/40">{a.pct}%</span>
               </div>
             ))}
           </div>

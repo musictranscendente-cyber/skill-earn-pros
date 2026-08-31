@@ -12,6 +12,7 @@ export function Navbar() {
   const { t } = useLang();
   const links = [
     { to: "/", label: t("nav.home") },
+    { to: "/play", label: t("nav.play") },
     { to: "/genesis", label: t("nav.genesis") },
     { to: "/dashboard", label: t("nav.dashboard") },
     { to: "/claim", label: t("nav.claim") },
