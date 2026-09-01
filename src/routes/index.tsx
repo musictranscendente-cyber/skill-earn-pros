@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
   Sword, Trophy, Coins, Users, ShieldCheck, Zap, TrendingUp, AlertTriangle,
-  Flame, Rocket, ArrowRight, ArrowDown, FileText, ChevronDown,
+  Flame, Rocket, ArrowRight, ArrowDown, FileText, ChevronDown, Gamepad2, Lock,
   type LucideIcon,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
@@ -12,6 +12,20 @@ import { Countdown } from "@/components/Countdown";
 import { TIERS, GENESIS } from "@/lib/wallet";
 import { useLang } from "@/lib/i18n";
 import { useState } from "react";
+import { FloatingGameIcons } from "@/components/home/FloatingGameIcons";
+import { SectionBackdrop } from "@/components/home/SectionBackdrop";
+import {
+  Connect4Thumb,
+  CheckersThumb,
+  ChessThumb,
+  DominoThumb,
+  CardsThumb,
+  PoolThumb,
+  TicTacToeThumb,
+  BattleshipThumb,
+  SudokuThumb,
+  PingPongThumb,
+} from "@/components/play/GameThumbs";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -36,6 +50,7 @@ function Index() {
   return (
     <Layout>
       <Hero />
+      <GamesShowcase />
       <Problem />
       <Solution />
       <Economy />
@@ -55,6 +70,7 @@ function Hero() {
   return (
     <section className="relative overflow-hidden pt-20 pb-14 md:pt-32 md:pb-20">
       <GridBackground />
+      <FloatingGameIcons variant="hero" />
       <div className="relative mx-auto max-w-7xl px-6">
         <motion.div
           initial="hidden"
@@ -103,6 +119,28 @@ function Hero() {
               <source src="/logo-spin-alpha.webm" type="video/webm" />
               <source src="/logo-spin.mp4" type="video/mp4" />
             </video>
+            {/* Tilted mini product card — a real preview of the stake→PVP math shown on
+                /genesis, floating in perspective. Gives the hero a "there's an actual app
+                here" anchor instead of only brand art. */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: [0, -10, 0] }}
+              transition={{
+                opacity: { delay: 0.7, duration: 0.6 },
+                y: { delay: 0.7, duration: 5, repeat: Infinity, ease: "easeInOut" },
+              }}
+              style={{ transform: "perspective(900px) rotateY(-12deg) rotateX(4deg)" }}
+              className="glass neon-border absolute -bottom-2 -left-4 z-10 hidden w-52 rounded-2xl p-4 sm:block"
+            >
+              <div className="text-[10px] uppercase tracking-widest text-white/40">{t("hero.mockup.stake")}</div>
+              <div className="text-silver mt-1 text-2xl font-bold">$50</div>
+              <div className="mt-2 flex items-center gap-1 text-xs text-[var(--neon-blue)]">
+                <TrendingUp className="h-3 w-3" /> 25.000 PVP
+              </div>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div className="h-full w-3/4 rounded-full bg-gradient-to-r from-[var(--neon-purple)] to-[var(--neon-blue)]" />
+              </div>
+            </motion.div>
           </motion.div>
         </motion.div>
 
@@ -211,6 +249,76 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
   );
 }
 
+const SHOWCASE_GAMES = [
+  { Thumb: Connect4Thumb, titleKey: "play.games.connect4" as const, available: true },
+  { Thumb: CheckersThumb, titleKey: "play.games.checkers" as const, available: false },
+  { Thumb: ChessThumb, titleKey: "play.games.chess" as const, available: false },
+  { Thumb: DominoThumb, titleKey: "play.games.domino" as const, available: false },
+  { Thumb: CardsThumb, titleKey: "play.games.truco" as const, available: false },
+  { Thumb: PoolThumb, titleKey: "play.games.pool" as const, available: false },
+  { Thumb: TicTacToeThumb, titleKey: "play.games.tictactoe" as const, available: false },
+  { Thumb: BattleshipThumb, titleKey: "play.games.battleship" as const, available: false },
+  { Thumb: SudokuThumb, titleKey: "play.games.sudoku" as const, available: false },
+  { Thumb: PingPongThumb, titleKey: "play.games.pingpong" as const, available: false },
+];
+
+/** New section: makes "this is a multi-game platform" obvious at a glance, right after the
+ *  hero — reuses the exact card treatment and copy already proven on /play so it feels like
+ *  one product, not a bolt-on. */
+function GamesShowcase() {
+  const { t } = useLang();
+  return (
+    <Section
+      id="games"
+      eyebrow={t("games.eyebrow")}
+      title={<>{t("games.title1")} <span className="text-gradient">{t("games.title2")}</span></>}
+      subtitle={t("games.subtitle")}
+      className="relative"
+    >
+      <SectionBackdrop variant="dots" accent="#8A2EFF" />
+      <FloatingGameIcons variant="subtle" />
+      <div className="relative grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
+        {SHOWCASE_GAMES.map((g, i) => (
+          <motion.div
+            key={g.titleKey}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.4, delay: i * 0.05 }}
+            className={`glass relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl p-4 text-center transition sm:p-5 ${
+              g.available
+                ? "neon-border hover:-translate-y-1 hover:border-[var(--neon-purple)]/70 hover:shadow-[0_0_24px_rgba(138,46,255,0.3)]"
+                : ""
+            }`}
+          >
+            {!g.available && (
+              <span className="absolute right-2 top-2 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-black/50">
+                <Lock className="h-3.5 w-3.5 text-white/60" />
+              </span>
+            )}
+            <g.Thumb className="h-16 w-16 sm:h-20 sm:w-20" />
+            <span className="text-sm font-semibold text-white">{t(g.titleKey)}</span>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${
+                g.available
+                  ? "bg-emerald-400/15 text-emerald-400 ring-1 ring-emerald-400/30"
+                  : "border border-white/10 bg-white/[0.03] text-white/40"
+              }`}
+            >
+              {g.available ? t("play.games.available") : t("play.games.soon")}
+            </span>
+          </motion.div>
+        ))}
+      </div>
+      <div className="relative mt-8 text-center">
+        <Link to="/play" className="btn-neon btn-neon-hover">
+          <Gamepad2 className="h-4 w-4" /> {t("games.cta")}
+        </Link>
+      </div>
+    </Section>
+  );
+}
+
 function Problem() {
   const { t } = useLang();
   const items = [
@@ -225,13 +333,16 @@ function Problem() {
       eyebrow={t("problem.eyebrow")}
       title={<>{t("problem.title1")} <span className="text-gradient">{t("problem.title2")}</span>.</>}
       subtitle={t("problem.subtitle")}
+      className="relative"
     >
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+      <SectionBackdrop variant="vignette" accent="#FB7185" />
+      <FloatingGameIcons variant="subtle" />
+      <div className="relative grid gap-5 md:grid-cols-2 lg:grid-cols-4">
         {items.map((it, i) => (
           <motion.div
             key={it.title}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 24, scale: 0.94 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.5, delay: i * 0.08 }}
             className="glass group relative overflow-hidden rounded-2xl p-6"
@@ -267,13 +378,16 @@ function Solution() {
       eyebrow={t("solution.eyebrow")}
       title={<>{t("solution.title1")} <span className="text-gradient">{t("solution.title2")}</span>.</>}
       subtitle={t("solution.subtitle")}
+      className="relative"
     >
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+      <SectionBackdrop variant="scan" accent="#00B2FF" />
+      <FloatingGameIcons variant="right" />
+      <div className="relative grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         {pillars.map((p, i) => (
           <motion.div
             key={p.title}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, x: i % 2 === 0 ? -24 : 24 }}
+            whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.5, delay: i * 0.06 }}
             className="glass group relative overflow-hidden rounded-2xl p-6 transition hover:-translate-y-1 hover:border-[var(--neon-purple)]/40"
@@ -308,17 +422,32 @@ function Economy() {
       eyebrow={t("economy.eyebrow")}
       title={<>{t("economy.title1")} <span className="text-gradient">{t("economy.title2")}</span>.</>}
       subtitle={t("economy.subtitle")}
+      className="relative"
     >
-      <div className="glass neon-border rounded-3xl p-6 md:p-10">
-        <div className="relative grid grid-cols-1 gap-4 md:grid-cols-7">
+      <SectionBackdrop variant="dots" accent="#22D3EE" />
+      <FloatingGameIcons variant="subtle" />
+      {/* This is the flagship section — the whole "why the token has real value" argument —
+          so it gets bigger icons, bigger type, more padding and a stronger glow than its
+          neighbors instead of the same-weight treatment every other section gets. */}
+      <div className="relative mb-6 flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#22D3EE]">
+        <Zap className="h-3.5 w-3.5" /> {t("economy.flagship")}
+      </div>
+      <div
+        className="glass relative rounded-3xl p-8 md:p-14"
+        style={{
+          border: "1px solid color-mix(in srgb, #22D3EE 45%, transparent)",
+          boxShadow: "0 0 0 1px color-mix(in srgb, #22D3EE 18%, transparent), 0 18px 60px -12px color-mix(in srgb, #22D3EE 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.07)",
+        }}
+      >
+        <div className="relative grid grid-cols-1 gap-6 md:grid-cols-7 md:gap-4">
           {/* baseline current track + a traveling spark, reinforcing "value flowing through the system" */}
-          <div className="absolute left-8 right-8 top-8 hidden h-px bg-gradient-to-r from-transparent via-white/15 to-transparent md:block" />
+          <div className="absolute left-10 right-10 top-10 hidden h-px bg-gradient-to-r from-transparent via-white/15 to-transparent md:block" />
           <motion.div
             aria-hidden
             animate={{ left: ["3%", "97%"] }}
             transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-8 hidden h-2 w-2 -translate-y-1/2 rounded-full md:block"
-            style={{ background: "var(--neon-blue)", boxShadow: "0 0 14px 3px rgba(0,178,255,0.85)" }}
+            className="absolute top-10 hidden h-2.5 w-2.5 -translate-y-1/2 rounded-full md:block"
+            style={{ background: "var(--neon-blue)", boxShadow: "0 0 18px 4px rgba(0,178,255,0.9)" }}
           />
           {flow.map((step, i) => (
             <motion.div
@@ -329,12 +458,12 @@ function Economy() {
               transition={{ duration: 0.45, delay: i * 0.07 }}
               className="group relative flex flex-col items-center text-center"
             >
-              <IconBadge icon={step.icon} size="sm" shape="square" color={ECONOMY_ACCENTS[i % ECONOMY_ACCENTS.length]} />
-              <div className="mt-3 text-sm font-semibold">{step.label}</div>
-              <div className="text-xs text-white/45">{step.desc}</div>
+              <IconBadge icon={step.icon} size="md" shape="square" color={ECONOMY_ACCENTS[i % ECONOMY_ACCENTS.length]} />
+              <div className="mt-3 text-base font-bold">{step.label}</div>
+              <div className="text-sm text-white/50">{step.desc}</div>
               {i < flow.length - 1 && (
                 <>
-                  <div className="absolute right-[-14px] top-7 hidden md:block">
+                  <div className="absolute right-[-14px] top-9 hidden md:block">
                     <ArrowRight className="h-4 w-4 text-white/30" />
                   </div>
                   <div className="mt-2 md:hidden">
@@ -376,8 +505,10 @@ function Tokenomics() {
       eyebrow={t("tokenomics.eyebrow")}
       title={<>{t("tokenomics.title1")} <span className="text-gradient">{t("tokenomics.title2")}</span>.</>}
       subtitle={t("tokenomics.subtitle")}
+      className="relative"
     >
-      <div className="grid items-center gap-10 lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
+      <SectionBackdrop variant="vignette" accent="#e879f9" />
+      <div className="relative grid items-center gap-10 lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
         <div className="order-2 grid grid-cols-2 gap-4 lg:order-1">
           <Card label={t("tokenomics.supply")} value="1,000,000,000" sub="PVP" />
           <Card label={t("tokenomics.price")} value="$0.002" sub={t("tokenomics.price.sub")} />
@@ -450,16 +581,19 @@ function Tiers() {
       eyebrow={t("tiers.eyebrow")}
       title={<>{t("tiers.title1")} <span className="text-gradient">{t("tiers.title2")}</span>.</>}
       subtitle={t("tiers.subtitle")}
+      className="relative"
     >
-      <div className="grid gap-5 md:grid-cols-3 lg:grid-cols-5">
+      <SectionBackdrop variant="dots" accent="#facc15" />
+      <FloatingGameIcons variant="right" />
+      <div className="relative grid gap-5 md:grid-cols-3 lg:grid-cols-5">
         {TIERS.map((tItem, i) => {
           const featured = tItem.name === "Gold";
           const pvp = (tItem.min / 0.002).toLocaleString();
           return (
             <motion.div
               key={tItem.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 24, rotate: i % 2 === 0 ? -2.5 : 2.5 }}
+              whileInView={{ opacity: 1, y: 0, rotate: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.05 }}
               className={`relative rounded-3xl p-6 ${featured ? "neon-border bg-gradient-to-b from-[var(--neon-purple)]/15 to-transparent" : "glass"}`}
@@ -488,7 +622,11 @@ function Tiers() {
                 {tItem.min >= 500 && <li>• {t("tiers.benefit.revshare")}</li>}
                 {tItem.min >= 1000 && <li>• {t("tiers.benefit.council")}</li>}
               </ul>
-              <Link to="/genesis" className={`mt-6 block rounded-full py-2.5 text-center text-sm font-semibold ${featured ? "btn-neon btn-neon-hover" : "btn-ghost btn-ghost-hover"}`}>
+              <Link
+                to="/genesis"
+                search={{ amount: tItem.min }}
+                className={`mt-6 block rounded-full py-2.5 text-center text-sm font-semibold ${featured ? "btn-neon btn-neon-hover" : "btn-ghost btn-ghost-hover"}`}
+              >
                 {t("tiers.reserve")} {tItem.name}
               </Link>
             </motion.div>
@@ -514,7 +652,10 @@ function Roadmap() {
       eyebrow={t("roadmap.eyebrow")}
       title={<>{t("roadmap.title1")} <span className="text-gradient">{t("roadmap.title2")}</span>.</>}
       subtitle={t("roadmap.subtitle")}
+      className="relative"
     >
+      <SectionBackdrop variant="vignette" accent="#00B2FF" />
+      <FloatingGameIcons variant="subtle" />
       <div className="relative">
         <div className="absolute left-4 top-0 hidden h-full w-px bg-gradient-to-b from-[var(--neon-purple)]/60 via-[var(--neon-blue)]/30 to-transparent md:block" />
         <div className="space-y-6">

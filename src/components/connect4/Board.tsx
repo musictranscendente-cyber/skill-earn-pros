@@ -22,9 +22,17 @@ export function Connect4Board({
   activePlayer: 1 | 2;
 }) {
   const [hoverCol, setHoverCol] = useState<number | null>(null);
+  // Touch devices fire a synthetic "mouseenter" on tap with no matching
+  // "mouseleave", so the ghost preview would get stuck lit on the last
+  // column touched. Only show it on devices that have a real hover concept.
+  const [supportsHover] = useState(
+    () => typeof window !== "undefined" && window.matchMedia?.("(hover: hover) and (pointer: fine)").matches,
+  );
 
   return (
-    <div className="glass neon-border mx-auto w-full max-w-xl rounded-3xl p-3 md:p-4">
+    // No own border/background here anymore — this board now renders inside the
+    // shared game-shell box in play.tsx, which supplies that chrome for every stage.
+    <div className="mx-auto w-full">
       <div
         className="grid gap-1.5 md:gap-2"
         style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))` }}
@@ -47,7 +55,8 @@ export function Connect4Board({
             >
               {Array.from({ length: ROWS }).map((__, r) => {
                 const cell = board[r][c];
-                const showGhost = canPlay && hoverCol === c && cell === 0 && isTopEmptyOfColumn(board, c, r);
+                const showGhost =
+                  canPlay && supportsHover && hoverCol === c && cell === 0 && isTopEmptyOfColumn(board, c, r);
                 const win = isWinningCell(winningLine, r, c);
                 return (
                   <div

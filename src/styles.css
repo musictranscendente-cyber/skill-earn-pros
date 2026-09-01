@@ -117,6 +117,11 @@
       radial-gradient(ellipse 80% 60% at 15% -10%, rgba(138, 46, 255, 0.18), transparent 60%),
       radial-gradient(ellipse 70% 50% at 90% 10%, rgba(0, 178, 255, 0.14), transparent 60%);
     background-attachment: fixed;
+    /* SectionBackdrop uses a `w-screen` full-bleed trick so its effects run edge-to-edge
+       instead of stopping at the centered max-w-7xl content column. `100vw` can be a hair
+       wider than the visible viewport when a vertical scrollbar is present — this absorbs
+       that without adding a horizontal scrollbar of its own. */
+    overflow-x: hidden;
   }
 
   ::selection {
@@ -192,10 +197,27 @@
 }
 
 @keyframes pvp-pulse-glow {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
+  /* Used only by the Genesis purchase card's edge halo — the animated `opacity` here
+     overrides whatever opacity class is on the element for the whole animation, so these
+     values ARE the real intensity (the element's own opacity-[...] class barely matters
+     once this runs). Keep this range subtle; it used to swing 0.6→1 and read as a much
+     bigger, "wider" glow than intended. */
+  0%, 100% { opacity: 0.12; transform: scale(1); }
+  50% { opacity: 0.22; transform: scale(1.015); }
+}
+@keyframes pvp-cta-shine {
+  /* A diagonal light streak that sweeps across the Genesis confirm button, then pauses
+     before repeating. Doubles as a "buy me" nudge and as the fix for the Silver tier
+     (a flat #c0c0c0 fill alone reads as a dull, disabled grey — a moving highlight makes
+     it read as a shiny metal instead). */
+  0% { transform: translateX(-120%) skewX(-15deg); }
+  55%, 100% { transform: translateX(220%) skewX(-15deg); }
 }
 @keyframes pvp-grid-float {
   0% { transform: translateY(0); }
   100% { transform: translateY(-40px); }
+}
+@keyframes pvp-border-flow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
 }

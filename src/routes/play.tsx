@@ -24,7 +24,7 @@ import {
   isSoundEnabled,
   setSoundEnabled,
 } from "@/lib/sound";
-import { Gamepad2, Search, Swords, Trophy, RotateCcw, Flame, Volume2, VolumeX, ChevronLeft, Lock } from "lucide-react";
+import { Gamepad2, Search, Swords, Trophy, RotateCcw, Flame, Volume2, VolumeX, ChevronLeft, Lock, GripHorizontal, Coins } from "lucide-react";
 import {
   Connect4Thumb,
   CheckersThumb,
@@ -55,7 +55,7 @@ export const Route = createFileRoute("/play")({
   component: PlayPage,
 });
 
-const STAKES = [1, 5, 20, 100];
+const STAKES = [1, 5, 10, 20, 50, 100];
 const OPPONENTS = [
   { name: "ShadowByte", emoji: "🥷" },
   { name: "NeonRider", emoji: "🐉" },
@@ -318,90 +318,18 @@ function PlayPage() {
               </motion.div>
             )}
 
-            {stage === "intro" && (
+            {stage !== "select" && (
               <motion.div
-                key="intro"
+                key="game-shell"
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -16 }}
-                className="glass neon-border mx-auto max-w-lg rounded-3xl p-6 text-center md:p-8"
+                className="glass neon-border mx-auto w-full max-w-xl rounded-3xl p-4 md:p-6"
               >
-                <div className="mb-2 text-xs uppercase tracking-widest text-white/50">{t("play.stake.label")}</div>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {STAKES.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => {
-                        setStake(s);
-                        playClick();
-                      }}
-                      className={`rounded-full border px-4 py-2 text-sm transition ${
-                        stake === s
-                          ? "border-[var(--neon-purple)] bg-[var(--neon-purple)]/15 text-white"
-                          : "border-white/10 bg-white/[0.03] text-white/70 hover:text-white"
-                      }`}
-                    >
-                      ${s}
-                    </button>
-                  ))}
-                </div>
-                <p className="mt-3 text-xs text-white/40">{t("play.stake.note")}</p>
-                <button onClick={beginSearch} className="btn-neon btn-neon-hover mt-6 w-full">
-                  <Search className="h-4 w-4" /> {t("play.find.cta")}
-                </button>
-              </motion.div>
-            )}
-
-            {stage === "searching" && (
-              <motion.div
-                key="searching"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                className="glass neon-border mx-auto max-w-lg rounded-3xl p-10 text-center"
-              >
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1.4, repeat: Infinity, ease: "linear" }}
-                  className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--neon-purple)]/15 ring-1 ring-[var(--neon-purple)]/40"
-                >
-                  <Search className="h-6 w-6 text-[var(--neon-purple)]" />
-                </motion.div>
-                <h2 className="mt-5 text-xl font-semibold">{t("play.searching.title")}</h2>
-                <p className="mt-1 text-sm text-white/50">{t("play.searching.sub")}</p>
-              </motion.div>
-            )}
-
-            {stage === "found" && (
-              <motion.div
-                key="found"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                className="glass neon-border mx-auto max-w-lg rounded-3xl p-8 text-center"
-              >
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[var(--neon-purple)]/25 to-[var(--neon-blue)]/15 text-3xl ring-1 ring-white/10">
-                  {opponent.emoji}
-                </div>
-                <h2 className="mt-4 text-xl font-semibold">{t("play.found.title")}</h2>
-                <div className="mt-1 text-lg text-gradient font-bold">{opponent.name}</div>
-                <div className="mt-2 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] uppercase tracking-widest text-white/50">
-                  {t("play.found.tag")}
-                </div>
-                <button onClick={startMatch} className="btn-neon btn-neon-hover mt-6 w-full">
-                  <Swords className="h-4 w-4" /> {t("play.start.cta")}
-                </button>
-              </motion.div>
-            )}
-
-            {(stage === "playing" || stage === "result") && (
-              <motion.div
-                key="playing"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-              >
-                <div className="mx-auto mb-5 flex max-w-xl items-center justify-between">
+                {/* Persistent header across every in-game stage — keeps the box's shape
+                    consistent from stake selection all the way to the result screen,
+                    instead of each stage having its own wildly different-sized card. */}
+                <div className="mb-4 flex items-center justify-between">
                   <PlayerChip
                     label={t("play.you")}
                     colorLabel={t("play.color.you")}
@@ -413,86 +341,127 @@ function PlayPage() {
                     {stage === "playing" ? (turn === 1 ? t("play.turn.you") : t("play.turn.bot")) : " "}
                   </div>
                   <PlayerChip
-                    label={opponent.name}
+                    label={stage === "intro" || stage === "searching" ? "?" : opponent.name}
                     colorLabel={t("play.color.bot")}
-                    emoji={opponent.emoji}
+                    emoji={stage === "intro" || stage === "searching" ? "❔" : opponent.emoji}
                     active={turn === 2 && stage === "playing"}
                     color="blue"
                     reverse
                   />
                 </div>
 
-                <Connect4Board
-                  board={board}
-                  onDrop={handleDrop}
-                  disabled={stage !== "playing"}
-                  winningLine={winLine}
-                  activePlayer={turn}
-                />
-
-                <AnimatePresence>
-                  {stage === "result" && (
+                <AnimatePresence mode="wait">
+                  {stage === "intro" && (
                     <motion.div
-                      initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ type: "spring", stiffness: 340, damping: 22 }}
-                      className={`glass mx-auto mt-6 max-w-lg rounded-3xl border-2 p-8 text-center ${
-                        resultColor === "emerald"
-                          ? "border-emerald-400/50 shadow-[0_0_40px_rgba(52,211,153,0.25)]"
-                          : resultColor === "rose"
-                            ? "border-rose-400/50 shadow-[0_0_40px_rgba(244,63,94,0.2)]"
-                            : "border-yellow-400/50 shadow-[0_0_40px_rgba(250,204,21,0.2)]"
-                      }`}
+                      key="intro"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      // justify-between instead of a centered blob — spreads the header, the
+                      // stake grid, and the CTA across the full box height instead of leaving
+                      // big empty gaps above and below a small cluster of controls.
+                      className="flex aspect-[7/6] w-full flex-col justify-between py-1"
+                    >
+                      <div className="text-center">
+                        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--neon-purple)]/25 to-[var(--neon-blue)]/15 ring-1 ring-white/10">
+                          <Coins className="h-7 w-7 text-[var(--neon-purple)]" />
+                        </div>
+                        <div className="text-xs uppercase tracking-widest text-white/50">{t("play.stake.label")}</div>
+                        <p className="mt-1 text-xs text-white/35">{t("play.stake.sub")}</p>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+                        {STAKES.map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => {
+                              setStake(s);
+                              playClick();
+                            }}
+                            className={`flex flex-col items-center gap-1 rounded-2xl border py-3.5 transition sm:py-4 ${
+                              stake === s
+                                ? "border-[var(--neon-purple)] bg-[var(--neon-purple)]/15 shadow-[0_0_20px_rgba(138,46,255,0.25)]"
+                                : "border-white/10 bg-white/[0.03] hover:border-white/25 hover:bg-white/[0.06]"
+                            }`}
+                          >
+                            <span className={`text-lg font-bold sm:text-xl ${stake === s ? "text-white" : "text-white/80"}`}>${s}</span>
+                            <span className="text-[10px] text-white/40">
+                              {t("play.stake.win.prefix")} ${(s * 0.9).toFixed(2)}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="text-center">
+                        <p className="mb-3 text-[11px] text-white/40">{t("play.stake.note")}</p>
+                        <button onClick={beginSearch} className="btn-neon btn-neon-hover w-full">
+                          <Search className="h-4 w-4" /> {t("play.find.cta")}
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {stage === "searching" && (
+                    <motion.div
+                      key="searching"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="flex aspect-[7/6] w-full flex-col items-center justify-center text-center"
                     >
                       <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 14, delay: 0.1 }}
-                        className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ring-1 ${
-                          resultColor === "emerald"
-                            ? "bg-emerald-400/15 ring-emerald-400/40"
-                            : resultColor === "rose"
-                              ? "bg-rose-400/15 ring-rose-400/40"
-                              : "bg-yellow-400/10 ring-yellow-400/30"
-                        }`}
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1.4, repeat: Infinity, ease: "linear" }}
+                        className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--neon-purple)]/15 ring-1 ring-[var(--neon-purple)]/40"
                       >
-                        <Trophy
-                          className={`h-7 w-7 ${
-                            resultColor === "emerald" ? "text-emerald-400" : resultColor === "rose" ? "text-rose-400" : "text-yellow-300"
-                          }`}
-                        />
+                        <Search className="h-6 w-6 text-[var(--neon-purple)]" />
                       </motion.div>
-                      <h2
-                        className={`mt-4 text-3xl font-extrabold tracking-tight md:text-4xl ${
-                          resultColor === "emerald" ? "text-emerald-400" : resultColor === "rose" ? "text-rose-400" : "text-yellow-300"
-                        }`}
-                      >
-                        {resultCopy.big}
-                      </h2>
-                      <p className="mt-1 text-sm text-white/60">{resultCopy.sub}</p>
-                      {resultType === "win" && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.7 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ type: "spring", stiffness: 320, damping: 16, delay: 0.2 }}
-                          className="mt-5"
-                        >
-                          <div className="text-xs uppercase tracking-widest text-white/40">{t("play.reward.label")}</div>
-                          <div className="mt-1 text-5xl font-extrabold text-emerald-400 drop-shadow-[0_0_28px_rgba(52,211,153,0.55)] md:text-6xl">
-                            +${winnings.toFixed(2)}
-                          </div>
-                          <p className="mt-2 text-[11px] text-white/40">{t("play.reward.demo.note")}</p>
-                        </motion.div>
-                      )}
-                      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                        <button onClick={beginSearch} className="btn-ghost btn-ghost-hover flex-1 text-sm">
-                          <RotateCcw className="h-4 w-4" /> {t("play.again.cta")}
-                        </button>
-                        <Link to="/genesis" className="btn-neon btn-neon-hover flex-1 text-sm">
-                          <Flame className="h-4 w-4" /> {t("play.genesis.cta")}
-                        </Link>
+                      <h2 className="mt-5 text-xl font-semibold">{t("play.searching.title")}</h2>
+                      <p className="mt-1 text-sm text-white/50">{t("play.searching.sub")}</p>
+                    </motion.div>
+                  )}
+
+                  {stage === "found" && (
+                    <motion.div
+                      key="found"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="flex aspect-[7/6] w-full flex-col items-center justify-center text-center"
+                    >
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[var(--neon-purple)]/25 to-[var(--neon-blue)]/15 text-3xl ring-1 ring-white/10">
+                        {opponent.emoji}
                       </div>
+                      <h2 className="mt-4 text-xl font-semibold">{t("play.found.title")}</h2>
+                      <div className="mt-1 text-lg text-gradient font-bold">{opponent.name}</div>
+                      <div className="mt-2 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] uppercase tracking-widest text-white/50">
+                        {t("play.found.tag")}
+                      </div>
+                      <button onClick={startMatch} className="btn-neon btn-neon-hover mt-6 w-full max-w-xs">
+                        <Swords className="h-4 w-4" /> {t("play.start.cta")}
+                      </button>
+                    </motion.div>
+                  )}
+
+                  {(stage === "playing" || stage === "result") && (
+                    <motion.div
+                      key="playing"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="w-full"
+                    >
+                      <Connect4Board
+                        board={board}
+                        onDrop={handleDrop}
+                        disabled={stage !== "playing"}
+                        winningLine={winLine}
+                        activePlayer={turn}
+                      />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -505,6 +474,97 @@ function PlayPage() {
           )}
         </div>
       </section>
+
+      {/* Result popup — floating and draggable, not a full-screen modal: it opens centered
+          for maximum impact, but has no dark backdrop, so the board stays fully visible and
+          the player can drag the card aside to screenshot the winning board underneath.
+          Rendered outside the animated game-shell tree on purpose: Framer Motion drives its
+          transitions via CSS transform, and a `position: fixed` descendant of a transformed
+          ancestor anchors to that ancestor instead of the viewport — this stays a direct
+          child of Layout so "fixed" always means the real screen. */}
+      <AnimatePresence>
+        {stage === "result" && (
+          <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center px-6">
+            <motion.div
+              drag
+              dragMomentum={false}
+              dragElastic={0.12}
+              whileDrag={{ scale: 1.03 }}
+              initial={{ opacity: 0, y: 24, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -12, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 340, damping: 22 }}
+              // Solid background on purpose (not the translucent "glass" utility) — the
+              // popup floats freely over the colorful board now, so it needs to stay
+              // fully opaque and readable no matter what's behind it.
+              className={`pointer-events-auto w-full max-w-sm cursor-grab touch-none rounded-3xl border-2 bg-gradient-to-br from-[#161122] via-[#0e1420] to-[#0a1420] p-6 text-center active:cursor-grabbing md:p-8 ${
+                resultColor === "emerald"
+                  ? "border-emerald-400/50 shadow-[0_0_50px_rgba(52,211,153,0.35)]"
+                  : resultColor === "rose"
+                    ? "border-rose-400/50 shadow-[0_0_50px_rgba(244,63,94,0.3)]"
+                    : "border-yellow-400/50 shadow-[0_0_50px_rgba(250,204,21,0.3)]"
+              }`}
+            >
+              <GripHorizontal className="mx-auto mb-1 h-4 w-4 text-white/25" />
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 400, damping: 14, delay: 0.1 }}
+                className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ring-1 ${
+                  resultColor === "emerald"
+                    ? "bg-emerald-400/15 ring-emerald-400/40"
+                    : resultColor === "rose"
+                      ? "bg-rose-400/15 ring-rose-400/40"
+                      : "bg-yellow-400/10 ring-yellow-400/30"
+                }`}
+              >
+                <Trophy
+                  className={`h-7 w-7 ${
+                    resultColor === "emerald" ? "text-emerald-400" : resultColor === "rose" ? "text-rose-400" : "text-yellow-300"
+                  }`}
+                />
+              </motion.div>
+              <h2
+                className={`mt-4 text-3xl font-extrabold tracking-tight md:text-4xl ${
+                  resultColor === "emerald" ? "text-emerald-400" : resultColor === "rose" ? "text-rose-400" : "text-yellow-300"
+                }`}
+              >
+                {resultCopy.big}
+              </h2>
+              <p className="mt-1 text-sm text-white/60">{resultCopy.sub}</p>
+              {resultType === "win" && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ type: "spring", stiffness: 320, damping: 16, delay: 0.2 }}
+                  className="mt-5"
+                >
+                  <div className="text-xs uppercase tracking-widest text-white/40">{t("play.reward.label")}</div>
+                  <div className="mt-1 text-5xl font-extrabold text-emerald-400 drop-shadow-[0_0_28px_rgba(52,211,153,0.55)] md:text-6xl">
+                    +${winnings.toFixed(2)}
+                  </div>
+                  <p className="mt-2 text-[11px] text-white/40">{t("play.reward.demo.note")}</p>
+                </motion.div>
+              )}
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <button
+                  onClick={() => {
+                    playClick();
+                    setStage("intro");
+                  }}
+                  className="btn-ghost btn-ghost-hover flex-1 text-sm"
+                >
+                  <RotateCcw className="h-4 w-4" /> {t("play.again.cta")}
+                </button>
+                <Link to="/genesis" className="btn-neon btn-neon-hover flex-1 text-sm">
+                  <Flame className="h-4 w-4" /> {t("play.genesis.cta")}
+                </Link>
+              </div>
+              <p className="mt-3 text-[10px] uppercase tracking-widest text-white/25">{t("play.result.drag.hint")}</p>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </Layout>
   );
 }

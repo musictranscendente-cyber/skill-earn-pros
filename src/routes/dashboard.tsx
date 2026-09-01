@@ -4,8 +4,17 @@ import { GridBackground } from "@/components/Background";
 import { useWallet, tierFor, shortAddr, GENESIS } from "@/lib/wallet";
 import { WalletButton } from "@/components/WalletButton";
 import { Countdown } from "@/components/Countdown";
-import { Wallet, Trophy, Coins, Clock, ExternalLink } from "lucide-react";
+import { Wallet, Trophy, Coins, Clock, ExternalLink, Star, Shield, Award, Gem, type LucideIcon } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+
+/** Same mapping used on the Genesis page — keeps the tier's icon consistent site-wide. */
+const TIER_ICONS: Record<string, LucideIcon> = {
+  Starter: Star,
+  Bronze: Shield,
+  Silver: Award,
+  Gold: Trophy,
+  Diamond: Gem,
+};
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -57,7 +66,13 @@ function Dashboard() {
 
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
             <StatCard icon={Wallet} label={t("dashboard.stat.wallet")} value={shortAddr(address)} sub={t("dashboard.stat.wallet.sub")} />
-            <StatCard icon={Trophy} label={t("dashboard.stat.tier")} value={tier?.name ?? "—"} sub={tier ? `≥ $${tier.min}` : t("dashboard.stat.tier.unlock")} accent />
+            <StatCard
+              icon={tier ? TIER_ICONS[tier.name] ?? Trophy : Trophy}
+              label={t("dashboard.stat.tier")}
+              value={tier?.name ?? "—"}
+              sub={tier ? `≥ $${tier.min}` : t("dashboard.stat.tier.unlock")}
+              tierColor={tier?.color}
+            />
             <StatCard icon={Coins} label={t("dashboard.stat.reserved")} value={reservedPvp.toLocaleString()} sub={`$${invested.toLocaleString()} ${t("dashboard.stat.invested.suffix")}`} />
             <StatCard icon={Clock} label={t("dashboard.stat.status")} value={t("dashboard.stat.status.value")} sub={t("dashboard.stat.status.sub")} />
           </div>
@@ -129,17 +144,46 @@ function Dashboard() {
 }
 
 function StatCard({
-  icon: Icon, label, value, sub, accent,
+  icon: Icon, label, value, sub, tierColor,
 }: {
-  icon: typeof Wallet; label: string; value: string; sub?: string; accent?: boolean;
+  icon: typeof Wallet; label: string; value: string; sub?: string;
+  /** When set (the founder's actual tier color), this card breaks from the generic glass
+   *  look and wears that tier's color end to end — border, icon, glow, and the value text
+   *  itself — instead of a flat hardcoded purple every tier used to get regardless of which
+   *  one was actually earned. */
+  tierColor?: string;
 }) {
   return (
-    <div className={`rounded-3xl p-5 ${accent ? "neon-border bg-gradient-to-b from-[var(--neon-purple)]/15 to-transparent" : "glass"}`}>
-      <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-white/50">
-        <Icon className="h-3.5 w-3.5" /> {label}
+    <div
+      className={`relative overflow-hidden rounded-3xl p-5 ${tierColor ? "border" : "glass"}`}
+      style={
+        tierColor
+          ? {
+              background: `linear-gradient(160deg, color-mix(in srgb, ${tierColor} 24%, transparent), color-mix(in srgb, ${tierColor} 5%, transparent) 70%)`,
+              borderColor: `color-mix(in srgb, ${tierColor} 55%, transparent)`,
+              boxShadow: `0 0 34px -14px color-mix(in srgb, ${tierColor} 80%, transparent), inset 0 1px 0 rgba(255,255,255,0.06)`,
+            }
+          : undefined
+      }
+    >
+      {tierColor && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-6 -top-8 h-24 w-24 rounded-full opacity-30 blur-2xl"
+          style={{ background: tierColor }}
+        />
+      )}
+      <div className="relative flex items-center gap-2 text-xs uppercase tracking-widest text-white/50">
+        <Icon className="h-3.5 w-3.5" style={tierColor ? { color: tierColor, filter: `drop-shadow(0 0 6px color-mix(in srgb, ${tierColor} 70%, transparent))` } : undefined} />
+        {label}
       </div>
-      <div className="text-silver mt-2 text-2xl font-bold tracking-tight">{value}</div>
-      {sub && <div className="mt-1 text-xs text-white/45">{sub}</div>}
+      <div
+        className={`relative mt-2 text-2xl font-bold tracking-tight ${tierColor ? "" : "text-silver"}`}
+        style={tierColor ? { color: tierColor, textShadow: `0 0 18px color-mix(in srgb, ${tierColor} 55%, transparent)` } : undefined}
+      >
+        {value}
+      </div>
+      {sub && <div className="relative mt-1 text-xs text-white/45">{sub}</div>}
     </div>
   );
 }

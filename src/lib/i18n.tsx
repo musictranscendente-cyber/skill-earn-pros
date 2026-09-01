@@ -30,10 +30,21 @@ const STRINGS = {
   "hero.stat.raised.suffix": { pt: "do Hard Cap", en: "of cap" },
   "hero.stat.launch": { pt: "Lançamento em", en: "Launch In" },
   "hero.progress": { pt: "Progresso", en: "Progress" },
+  "hero.mockup.stake": { pt: "Aposta simulada", en: "Simulated stake" },
   "countdown.days": { pt: "Dias", en: "Days" },
   "countdown.hrs": { pt: "Hrs", en: "Hrs" },
   "countdown.min": { pt: "Min", en: "Min" },
   "countdown.sec": { pt: "Seg", en: "Sec" },
+
+  // Games showcase (homepage)
+  "games.eyebrow": { pt: "Biblioteca de Jogos", en: "Game Library" },
+  "games.title1": { pt: "Vários jogos", en: "Many classic" },
+  "games.title2": { pt: "clássicos, um só torneio", en: "games, one arena" },
+  "games.subtitle": {
+    pt: "Lig-4 já está disponível pra testar agora. Damas, xadrez, dominó, sinuca e mais estão a caminho — tudo dentro do mesmo sistema PvP com apostas simuladas hoje, reais no lançamento.",
+    en: "Connect 4 is live to try right now. Checkers, chess, domino, pool and more are on the way — all inside the same PvP system, simulated stakes today, real ones at launch.",
+  },
+  "games.cta": { pt: "Jogar demo grátis", en: "Play free demo" },
 
   // Problem
   "problem.eyebrow": { pt: "O Problema", en: "The Problem" },
@@ -75,6 +86,7 @@ const STRINGS = {
 
   // Economy
   "economy.eyebrow": { pt: "Economia de Jogo", en: "Gameplay Economy" },
+  "economy.flagship": { pt: "O motor econômico do PvP Pro", en: "The economic engine of PvP Pro" },
   "economy.title1": { pt: "Como o valor", en: "How value" },
   "economy.title2": { pt: "realmente flui", en: "actually flows" },
   "economy.subtitle": {
@@ -243,6 +255,8 @@ const STRINGS = {
   "genesis.cap.suffix": { pt: "limite", en: "cap" },
   "genesis.countdown.label": { pt: "Contagem para o lançamento", en: "Launch countdown" },
   "genesis.tier.ladder": { pt: "Escada de tiers", en: "Tier ladder" },
+  "genesis.popular": { pt: "Mais escolhido", en: "Most chosen" },
+  "genesis.slider.hint": { pt: "Ou arraste para personalizar", en: "Or drag to customize" },
   "genesis.toast.connect": { pt: "Conecte sua carteira primeiro", en: "Connect your wallet first" },
   "genesis.toast.reserved.prefix": { pt: "Reservado", en: "Reserved" },
   "genesis.toast.reserved.tier": { pt: "tier", en: "tier" },
@@ -311,8 +325,19 @@ const STRINGS = {
   "wallet.modal.desc": { pt: "Conecte na Base Mainnet para acessar seu painel de founder.", en: "Connect on Base Mainnet to access your founder dashboard." },
   "wallet.connecting": { pt: "Conectando…", en: "Connecting…" },
   "wallet.detected": { pt: "Detectado", en: "Detected" },
-  "wallet.demo.note": { pt: "Sessão de demonstração — seu endereço é gerado localmente só para preview.", en: "Demo session — your address is locally generated for preview." },
+  "wallet.demo.note": {
+    pt: "Conexão de carteira real. A compra da Genesis ainda roda em modo demonstração até o contrato auditado entrar no ar.",
+    en: "Real wallet connection. Genesis purchases still run in demo mode until the audited contract goes live.",
+  },
   "wallet.disconnect": { pt: "Desconectar", en: "Disconnect" },
+  "wallet.browser.wallet": { pt: "Carteira do navegador", en: "Browser wallet" },
+  "wallet.notfound.desc": {
+    pt: "Nenhuma carteira Web3 foi detectada neste navegador.",
+    en: "No Web3 wallet was detected in this browser.",
+  },
+  "wallet.notfound.cta": { pt: "Instalar MetaMask", en: "Install MetaMask" },
+  "wallet.comingsoon": { pt: "Em breve", en: "Coming soon" },
+  "wallet.switch.base": { pt: "Trocar para Base", en: "Switch to Base" },
 
   // Play / Lig-4 demo page
   "play.badge": { pt: "Demo Aberta · Grátis", en: "Open Demo · Free" },
@@ -323,6 +348,8 @@ const STRINGS = {
     en: "A free, no-strings preview of what 1v1 duels will feel like on PvP Pro. Pick a simulated stake, find an opponent, and play a round of Connect 4 — the score here is just for testing.",
   },
   "play.stake.label": { pt: "Aposta simulada", en: "Simulated stake" },
+  "play.stake.sub": { pt: "Escolha o valor e encontre um adversário", en: "Pick an amount and find an opponent" },
+  "play.stake.win.prefix": { pt: "ganha", en: "win" },
   "play.stake.note": { pt: "100% fictício — nenhum valor real é usado nesta demo.", en: "100% fictional — no real funds are used in this demo." },
   "play.find.cta": { pt: "Buscar Adversário", en: "Find Opponent" },
   "play.searching.title": { pt: "Procurando adversário…", en: "Searching for an opponent…" },
@@ -353,6 +380,7 @@ const STRINGS = {
   "play.result.win.big": { pt: "VOCÊ VENCEU!", en: "YOU WON!" },
   "play.result.lose.big": { pt: "VOCÊ PERDEU", en: "YOU LOST" },
   "play.result.draw.big": { pt: "EMPATE!", en: "DRAW!" },
+  "play.result.drag.hint": { pt: "Arraste para mover e ver o tabuleiro", en: "Drag to move and see the board" },
 
   // Game selection hub (on /play)
   "play.games.title": { pt: "Escolha um jogo", en: "Choose a game" },
