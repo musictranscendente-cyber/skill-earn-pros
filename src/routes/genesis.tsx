@@ -63,7 +63,7 @@ function GenesisPage() {
   const { t } = useLang();
   const { address, buy } = useWallet();
   const searchParams = Route.useSearch();
-  const [amount, setAmount] = useState(() => searchParams.amount ?? 250);
+  const [amount, setAmount] = useState(() => searchParams.amount ?? 500);
 
   // Also react to the search param changing while already on this page (e.g. clicking a
   // different tier card from another route without a full remount).

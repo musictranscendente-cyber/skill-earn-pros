@@ -119,28 +119,6 @@ function Hero() {
               <source src="/logo-spin-alpha.webm" type="video/webm" />
               <source src="/logo-spin.mp4" type="video/mp4" />
             </video>
-            {/* Tilted mini product card — a real preview of the stake→PVP math shown on
-                /genesis, floating in perspective. Gives the hero a "there's an actual app
-                here" anchor instead of only brand art. */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: [0, -10, 0] }}
-              transition={{
-                opacity: { delay: 0.7, duration: 0.6 },
-                y: { delay: 0.7, duration: 5, repeat: Infinity, ease: "easeInOut" },
-              }}
-              style={{ transform: "perspective(900px) rotateY(-12deg) rotateX(4deg)" }}
-              className="glass neon-border absolute -bottom-2 -left-4 z-10 hidden w-52 rounded-2xl p-4 sm:block"
-            >
-              <div className="text-[10px] uppercase tracking-widest text-white/40">{t("hero.mockup.stake")}</div>
-              <div className="text-silver mt-1 text-2xl font-bold">$50</div>
-              <div className="mt-2 flex items-center gap-1 text-xs text-[var(--neon-blue)]">
-                <TrendingUp className="h-3 w-3" /> 25.000 PVP
-              </div>
-              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
-                <div className="h-full w-3/4 rounded-full bg-gradient-to-r from-[var(--neon-purple)] to-[var(--neon-blue)]" />
-              </div>
-            </motion.div>
           </motion.div>
         </motion.div>
 
@@ -276,7 +254,6 @@ function GamesShowcase() {
       className="relative"
     >
       <SectionBackdrop variant="dots" accent="#8A2EFF" />
-      <FloatingGameIcons variant="subtle" />
       <div className="relative grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
         {SHOWCASE_GAMES.map((g, i) => (
           <motion.div
@@ -336,7 +313,6 @@ function Problem() {
       className="relative"
     >
       <SectionBackdrop variant="vignette" accent="#FB7185" />
-      <FloatingGameIcons variant="subtle" />
       <div className="relative grid gap-5 md:grid-cols-2 lg:grid-cols-4">
         {items.map((it, i) => (
           <motion.div
@@ -381,7 +357,6 @@ function Solution() {
       className="relative"
     >
       <SectionBackdrop variant="scan" accent="#00B2FF" />
-      <FloatingGameIcons variant="right" />
       <div className="relative grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         {pillars.map((p, i) => (
           <motion.div
@@ -425,7 +400,6 @@ function Economy() {
       className="relative"
     >
       <SectionBackdrop variant="dots" accent="#22D3EE" />
-      <FloatingGameIcons variant="subtle" />
       {/* This is the flagship section — the whole "why the token has real value" argument —
           so it gets bigger icons, bigger type, more padding and a stronger glow than its
           neighbors instead of the same-weight treatment every other section gets. */}
@@ -584,7 +558,6 @@ function Tiers() {
       className="relative"
     >
       <SectionBackdrop variant="dots" accent="#facc15" />
-      <FloatingGameIcons variant="right" />
       <div className="relative grid gap-5 md:grid-cols-3 lg:grid-cols-5">
         {TIERS.map((tItem, i) => {
           const featured = tItem.name === "Gold";
@@ -655,7 +628,6 @@ function Roadmap() {
       className="relative"
     >
       <SectionBackdrop variant="vignette" accent="#00B2FF" />
-      <FloatingGameIcons variant="subtle" />
       <div className="relative">
         <div className="absolute left-4 top-0 hidden h-full w-px bg-gradient-to-b from-[var(--neon-purple)]/60 via-[var(--neon-blue)]/30 to-transparent md:block" />
         <div className="space-y-6">

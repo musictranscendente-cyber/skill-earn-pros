@@ -62,19 +62,21 @@ export function CheckersThumb({ className }: ThumbProps) {
 }
 
 export function DominoThumb({ className }: ThumbProps) {
+  // A real light tile face (cream, like an actual domino) instead of a barely-visible
+  // translucent-white fill on the dark card background — that near-invisible fill was
+  // why the tile itself never actually read as a tile, just scattered dots.
   return (
     <svg viewBox="0 0 64 64" className={className} role="img" aria-label="Dominó">
       <rect x="2" y="2" width="60" height="60" rx="12" fill="#0b1020" stroke="rgba(255,255,255,0.12)" />
-      <g transform="rotate(-18 32 32)">
-        <rect x="10" y="20" width="44" height="20" rx="4" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" />
-        <line x1="32" y1="20" x2="32" y2="40" stroke="rgba(255,255,255,0.18)" />
-        <circle cx="18" cy="26" r="2" fill="#8A2EFF" />
-        <circle cx="18" cy="34" r="2" fill="#8A2EFF" />
-        <circle cx="26" cy="30" r="2" fill="#8A2EFF" />
-        <circle cx="40" cy="26" r="2" fill="#00B2FF" />
-        <circle cx="46" cy="30" r="2" fill="#00B2FF" />
-        <circle cx="40" cy="34" r="2" fill="#00B2FF" />
-      </g>
+      <rect x="9" y="18" width="46" height="28" rx="6" fill="#f4f1ea" stroke="rgba(0,0,0,0.25)" strokeWidth="1" />
+      <line x1="32" y1="18" x2="32" y2="46" stroke="#2a2a2a" strokeWidth="1.6" />
+      {/* 2: diagonal opposite corners, not a stacked column */}
+      <circle cx="17" cy="25" r="2.8" fill="#8A2EFF" />
+      <circle cx="26" cy="39" r="2.8" fill="#8A2EFF" />
+      {/* 3: a straight diagonal through the center */}
+      <circle cx="38" cy="25" r="2.8" fill="#00B2FF" />
+      <circle cx="44" cy="32" r="2.8" fill="#00B2FF" />
+      <circle cx="50" cy="39" r="2.8" fill="#00B2FF" />
     </svg>
   );
 }
@@ -103,13 +105,21 @@ export function TicTacToeThumb({ className }: ThumbProps) {
 }
 
 export function PoolThumb({ className }: ThumbProps) {
+  // The 8-ball, recolored into the brand's purple-to-blue gradient instead of plain
+  // black, so it ties into the site identity like the chess/arena icons do.
   return (
     <svg viewBox="0 0 64 64" className={className} role="img" aria-label="Sinuca">
       <rect x="2" y="2" width="60" height="60" rx="12" fill="#0b1020" stroke="rgba(255,255,255,0.12)" />
-      <circle cx="32" cy="32" r="22" fill="#0f3d2e" stroke="rgba(255,255,255,0.1)" />
-      <circle cx="24" cy="28" r="6" fill="#f8fafc" />
-      <circle cx="40" cy="38" r="6" fill="#facc15" stroke="#0f3d2e" strokeWidth="2" />
-      <circle cx="40" cy="38" r="6" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4" strokeDasharray="2 3" />
+      <circle cx="32" cy="33" r="19" fill="url(#pool-grad)" stroke="rgba(255,255,255,0.15)" />
+      <circle cx="32" cy="33" r="9.5" fill="#f8fafc" />
+      <text x="32" y="37" textAnchor="middle" fontSize="11" fontWeight="800" fill="#15161a">8</text>
+      <ellipse cx="25" cy="24" rx="6" ry="3" fill="rgba(255,255,255,0.2)" />
+      <defs>
+        <linearGradient id="pool-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#8A2EFF" />
+          <stop offset="100%" stopColor="#00B2FF" />
+        </linearGradient>
+      </defs>
     </svg>
   );
 }
@@ -135,16 +145,33 @@ export function ChessThumb({ className }: ThumbProps) {
 }
 
 export function CardsThumb({ className }: ThumbProps) {
+  // Two of Truco's famous "manilha" cards — 7 de copas (7 of hearts) in front, Ás de
+  // espadas (Ace of spades) behind — redone dark-card/purple-blue to match the site's
+  // own identity instead of a realistic white/red/black card face, with much less tilt
+  // than before (that heavy fan was what read as "encavalado" and "torto"), and the
+  // ace card shifted further right so there's a clean gap instead of sitting almost on
+  // top of the 7 card.
   return (
-    <svg viewBox="0 0 64 64" className={className} role="img" aria-label="Cartas">
+    <svg viewBox="0 0 64 64" className={className} role="img" aria-label="Truco">
       <rect x="2" y="2" width="60" height="60" rx="12" fill="#0b1020" stroke="rgba(255,255,255,0.12)" />
-      <g transform="rotate(-10 26 34)">
-        <rect x="14" y="18" width="24" height="32" rx="4" fill="#1a2340" stroke="rgba(255,255,255,0.18)" />
-        <path d="M26 26l3 6h6l-5 4 2 6-6-4-6 4 2-6-5-4h6z" fill="#00B2FF" />
+      <g transform="rotate(6 48 32)">
+        <rect x="36" y="15" width="24" height="34" rx="4" fill="#1a1030" stroke="rgba(255,255,255,0.2)" />
+        <text x="43" y="23" textAnchor="middle" fontSize="8" fontWeight="800" fill="#00B2FF">A</text>
+        <path
+          d="M49,41.4 C47.3,46.5 38.8,46.5 38.8,39.7 C38.8,32.9 45.6,29.5 49,24.4
+             C52.4,29.5 59.2,32.9 59.2,39.7 C59.2,46.5 50.7,46.5 49,41.4 Z"
+          fill="#00B2FF"
+        />
+        <path d="M46.9,41.4 L51.1,41.4 L49,46.5 Z" fill="#00B2FF" />
       </g>
-      <g transform="rotate(12 40 34)">
-        <rect x="26" y="18" width="24" height="32" rx="4" fill="#1a1030" stroke="rgba(255,255,255,0.18)" />
-        <path d="M38 26l3 6h6l-5 4 2 6-6-4-6 4 2-6-5-4h6z" fill="#8A2EFF" />
+      <g transform="rotate(-6 22 32)">
+        <rect x="10" y="15" width="24" height="34" rx="4" fill="#1a2340" stroke="rgba(255,255,255,0.2)" />
+        <text x="15" y="23" textAnchor="middle" fontSize="8" fontWeight="800" fill="#8A2EFF">7</text>
+        <path
+          d="M22,28.6 C20.3,23.5 11.8,23.5 11.8,30.3 C11.8,37.1 18.6,40.5 22,45.6
+             C25.4,40.5 32.2,37.1 32.2,30.3 C32.2,23.5 23.7,23.5 22,28.6 Z"
+          fill="#8A2EFF"
+        />
       </g>
     </svg>
   );
@@ -282,25 +309,27 @@ export function WheelThumb({ className }: ThumbProps) {
 }
 
 export function SudokuThumb({ className }: ThumbProps) {
-  const digits: Record<string, string> = { "0-0": "5", "1-2": "3", "2-1": "8", "3-3": "1" };
+  // A bold 3x3 grid rather than a true 9x9 — a real 9x9 grid's lines and digits are too
+  // fine to actually register at icon size; a chunky 3x3 reads as "grid puzzle" clearly
+  // at a glance, which is what the icon needs to do here.
+  const cell = 48 / 3;
+  const digits: Record<string, string> = { "0-0": "5", "2-1": "8", "1-2": "3" };
   return (
     <svg viewBox="0 0 64 64" className={className} role="img" aria-label="Sudoku">
       <rect x="2" y="2" width="60" height="60" rx="12" fill="#0b1020" stroke="rgba(255,255,255,0.12)" />
-      <g stroke="rgba(255,255,255,0.16)" strokeWidth="1.2">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <line key={`v${i}`} x1={10 + i * 11} y1="10" x2={10 + i * 11} y2="54" />
-        ))}
-        {[0, 1, 2, 3, 4].map((i) => (
-          <line key={`h${i}`} x1="10" y1={10 + i * 11} x2="54" y2={10 + i * 11} />
-        ))}
+      <g stroke="rgba(255,255,255,0.45)" strokeWidth="1.8">
+        <line x1={8 + cell} y1="8" x2={8 + cell} y2="56" />
+        <line x1={8 + cell * 2} y1="8" x2={8 + cell * 2} y2="56" />
+        <line x1="8" y1={8 + cell} x2="56" y2={8 + cell} />
+        <line x1="8" y1={8 + cell * 2} x2="56" y2={8 + cell * 2} />
       </g>
-      <rect x="10" y="10" width="44" height="44" rx="2" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" />
+      <rect x="8" y="8" width="48" height="48" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2.2" />
       {Object.entries(digits).map(([key, val]) => {
         const [col, row] = key.split("-").map(Number);
-        const x = 10 + col * 11 + 5.5;
-        const y = 10 + row * 11 + 5.5;
+        const x = 8 + col * cell + cell / 2;
+        const y = 8 + row * cell + cell / 2;
         return (
-          <text key={key} x={x} y={y + 3.5} textAnchor="middle" fontSize="8" fontWeight="700" fill="#00B2FF">
+          <text key={key} x={x} y={y + 4} textAnchor="middle" fontSize="11" fontWeight="700" fill="#00B2FF">
             {val}
           </text>
         );
@@ -331,16 +360,22 @@ export function ArenaThumb({ className }: ThumbProps) {
 }
 
 export function PingPongThumb({ className }: ThumbProps) {
+  // Just a paddle and one ball — no motion trail, no table. Paddle recolored into the
+  // brand's purple-to-blue gradient instead of flat purple + a plain darker-purple handle.
   return (
     <svg viewBox="0 0 64 64" className={className} role="img" aria-label="Tênis de Mesa">
       <rect x="2" y="2" width="60" height="60" rx="12" fill="#0b1020" stroke="rgba(255,255,255,0.12)" />
-      <rect x="8" y="26" width="48" height="16" rx="2" fill="#0f3d2e" stroke="rgba(255,255,255,0.15)" />
-      <line x1="32" y1="26" x2="32" y2="42" stroke="rgba(255,255,255,0.35)" strokeWidth="1.4" />
-      <rect x="10" y="14" width="4" height="12" rx="2" fill="#8A2EFF" transform="rotate(20 12 20)" />
-      <circle cx="14" cy="12" r="4.5" fill="#8A2EFF" />
-      <rect x="50" y="38" width="4" height="12" rx="2" fill="#00B2FF" transform="rotate(-20 52 44)" />
-      <circle cx="50" cy="50" r="4.5" fill="#00B2FF" />
-      <circle cx="30" cy="20" r="2.4" fill="#f8fafc" />
+      <g transform="rotate(-28 24 40)">
+        <ellipse cx="22" cy="36" rx="13" ry="14" fill="url(#pingpong-grad)" stroke="rgba(255,255,255,0.2)" strokeWidth="1.2" />
+        <rect x="19" y="48" width="6" height="15" rx="3" fill="url(#pingpong-grad)" />
+      </g>
+      <circle cx="46" cy="18" r="5.5" fill="#f8fafc" />
+      <defs>
+        <linearGradient id="pingpong-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#8A2EFF" />
+          <stop offset="100%" stopColor="#00B2FF" />
+        </linearGradient>
+      </defs>
     </svg>
   );
 }
