@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import type { ReactNode } from "react";
 import {
   Sword, Trophy, Coins, Users, ShieldCheck, Zap, TrendingUp, AlertTriangle,
   Flame, Rocket, ArrowRight, ArrowDown, FileText, ChevronDown, Gamepad2, Lock,
@@ -8,10 +9,9 @@ import {
 import { Layout } from "@/components/Layout";
 import { Section } from "@/components/Section";
 import { GridBackground } from "@/components/Background";
-import { Countdown } from "@/components/Countdown";
 import { TIERS, GENESIS } from "@/lib/wallet";
 import { useLang } from "@/lib/i18n";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FloatingGameIcons } from "@/components/home/FloatingGameIcons";
 import { SectionBackdrop } from "@/components/home/SectionBackdrop";
 import {
@@ -46,31 +46,73 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } },
 };
 
+// Thin seam sitting exactly on the boundary between two homepage sections — a
+// hairline with a brighter neon segment glowing at its center. Combined with
+// PanelBg below (the real source of contrast), it reads as a clean cut between
+// bands rather than a hard, jarring edge.
+function SectionDivider() {
+  return (
+    <div aria-hidden className="relative z-10 mx-auto h-px w-full max-w-6xl px-6">
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <div className="absolute left-1/2 top-1/2 h-px w-28 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-transparent via-[var(--neon-purple)] to-transparent opacity-70 shadow-[0_0_16px_2px_var(--neon-purple)]" />
+    </div>
+  );
+}
+
+// Wraps a section in the site's existing "card" tone (already used for every glass
+// panel/card across the page) so alternating sections sit on a visibly lighter
+// full-bleed band instead of all blending into the same page background.
+function PanelBg({ children }: { children: ReactNode }) {
+  return <div className="bg-[var(--card)]">{children}</div>;
+}
+
 function Index() {
   return (
     <Layout>
       <Hero />
-      <GamesShowcase />
+      <SectionDivider />
+      <PanelBg>
+        <GamesShowcase />
+      </PanelBg>
+      <SectionDivider />
       <Problem />
-      <Solution />
+      <SectionDivider />
+      <PanelBg>
+        <Solution />
+      </PanelBg>
+      <SectionDivider />
       <Economy />
-      <Tokenomics />
-      <Tiers />
+      <SectionDivider />
+      <PanelBg>
+        <Tokenomics />
+      </PanelBg>
+      <SectionDivider />
+      <MatchFlow />
+      <SectionDivider />
+      <PanelBg>
+        <Tiers />
+      </PanelBg>
+      <SectionDivider />
       <Roadmap />
-      <FAQ />
+      <SectionDivider />
+      <PanelBg>
+        <FAQ />
+      </PanelBg>
     </Layout>
   );
 }
 
 function Hero() {
   const { t } = useLang();
-  const raised = 3_247_891.63;
+  const raised = GENESIS.raised;
   const pct = Math.min(100, (raised / GENESIS.hardCap) * 100);
   const [videoReady, setVideoReady] = useState(false);
   return (
-    <section className="relative overflow-hidden pt-20 pb-14 md:pt-32 md:pb-20">
-      <GridBackground />
-      <FloatingGameIcons variant="hero" />
+    <section className="relative isolate overflow-hidden pt-20 pb-14 md:pt-32 md:pb-20">
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <LoopingBgVideo />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent from-5% via-[#05050a]/60 via-30% to-[#05050a]/85" />
+      </div>
       <div className="relative mx-auto max-w-7xl px-6">
         <motion.div
           initial="hidden"
@@ -79,13 +121,6 @@ function Hero() {
           className="grid items-center gap-12 lg:grid-cols-[1.15fr_1fr] lg:gap-8"
         >
           <div className="mx-auto max-w-2xl text-center lg:mx-0 lg:max-w-none lg:text-left">
-            <motion.div variants={fadeUp} className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/70 lg:mx-0">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--neon-purple)] opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--neon-purple)]" />
-              </span>
-              {t("hero.badge")}
-            </motion.div>
             <motion.h1
               variants={fadeUp}
               className="text-balance text-5xl font-extrabold leading-[1.02] tracking-tighter md:text-6xl lg:text-7xl"
@@ -100,9 +135,9 @@ function Hero() {
               <Link to="/genesis" className="btn-neon btn-neon-hover">
                 <Flame className="h-4 w-4" /> {t("hero.cta.founder")}
               </Link>
-              <a href="#" className="btn-ghost btn-ghost-hover">
+              <Link to="/whitepaper" className="btn-ghost btn-ghost-hover">
                 <FileText className="h-4 w-4" /> {t("hero.cta.whitepaper")}
-              </a>
+              </Link>
             </motion.div>
           </div>
 
@@ -129,13 +164,15 @@ function Hero() {
           className="glass neon-border mx-auto mt-16 max-w-5xl rounded-3xl p-6 md:p-8"
         >
           <div className="flex flex-wrap gap-x-8 gap-y-6">
-            <Stat label={t("hero.stat.price")} value="$0.002" sub={t("hero.stat.price.sub")} />
+            <Stat label={t("hero.stat.price")} value={`$${GENESIS.price.toFixed(2)}`} sub={t("hero.stat.price.sub")} />
             <Stat label={t("hero.stat.cap")} value={`$${GENESIS.hardCap.toLocaleString()}`} sub={t("hero.stat.cap.sub")} />
             <Stat label={t("hero.stat.raised")} value={`$${raised.toLocaleString()}`} sub={`${pct.toFixed(1)}% ${t("hero.stat.raised.suffix")}`} />
-            <div>
-              <div className="text-xs uppercase tracking-widest text-white/50">{t("hero.stat.launch")}</div>
-              <div className="mt-2"><Countdown to={GENESIS.launchDate} /></div>
-            </div>
+            <Stat
+              highlight
+              label={t("hero.stat.founders")}
+              value={`${GENESIS.foundersSold.toLocaleString()} / ${GENESIS.foundersTotal.toLocaleString()}`}
+              sub={t("hero.stat.founders.sub")}
+            />
           </div>
           <div className="mt-6">
             <div className="mb-2 flex items-center justify-between text-xs text-white/55">
@@ -217,7 +254,46 @@ function IconBadge({
   );
 }
 
-function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function Stat({
+  label,
+  value,
+  sub,
+  highlight = false,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  /** Marks the one stat that's genuinely urgent (limited Founder spots) so it visually
+   *  pops out of the row instead of reading as just another neutral metric. */
+  highlight?: boolean;
+}) {
+  if (highlight) {
+    return (
+      <motion.div
+        animate={{
+          boxShadow: [
+            "0 0 0px 0px rgba(138,46,255,0)",
+            "0 0 22px 1px rgba(138,46,255,0.35)",
+            "0 0 0px 0px rgba(138,46,255,0)",
+          ],
+        }}
+        transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+        className="relative rounded-2xl border border-[var(--neon-purple)]/40 bg-[var(--neon-purple)]/[0.07] px-4 py-3"
+      >
+        <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-[var(--neon-purple)]">
+          <span className="relative flex h-1.5 w-1.5 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--neon-purple)] opacity-75" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--neon-purple)]" />
+          </span>
+          {label}
+        </div>
+        <div className="mt-2 whitespace-nowrap text-2xl font-extrabold tracking-tight text-gradient drop-shadow-[0_0_20px_rgba(138,46,255,0.4)] md:text-3xl">
+          {value}
+        </div>
+        {sub && <div className="mt-1 whitespace-nowrap text-xs font-medium text-white/60">{sub}</div>}
+      </motion.div>
+    );
+  }
   return (
     <div>
       <div className="text-xs uppercase tracking-widest text-white/50">{label}</div>
@@ -240,6 +316,47 @@ const SHOWCASE_GAMES = [
   { Thumb: PingPongThumb, titleKey: "play.games.pingpong" as const, available: false },
 ];
 
+/** Looping cinematic background video. Sets `muted` on the DOM node
+ *  directly (not just via the JSX prop) and forces a manual restart on `ended` — some browsers
+ *  don't reliably honor the native `loop` attribute or the autoplay policy when `muted` is only
+ *  set as a React prop, so this guarantees the video actually plays and actually loops. */
+/** `topOffset` positions the (oversized) video directly instead of relying on
+ *  object-position's crop math, whose effective pan amount depends on the source/box
+ *  aspect ratio and is hard to predict — this way "-11%" always means the same thing
+ *  regardless of screen size: the video is rendered at 145% of the box height, and
+ *  `topOffset` says how much of that extra height sits above the visible box. */
+function LoopingBgVideo() {
+  const ref = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    v.muted = true;
+    const tryPlay = () => v.play().catch(() => {});
+    tryPlay();
+    const onEnded = () => {
+      v.currentTime = 0;
+      tryPlay();
+    };
+    v.addEventListener("ended", onEnded);
+    return () => v.removeEventListener("ended", onEnded);
+  }, []);
+
+  return (
+    <video
+      ref={ref}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="auto"
+      className="h-full w-full object-cover opacity-40"
+    >
+      <source src="/games-bg.mp4" type="video/mp4" />
+    </video>
+  );
+}
+
 /** New section: makes "this is a multi-game platform" obvious at a glance, right after the
  *  hero — reuses the exact card treatment and copy already proven on /play so it feels like
  *  one product, not a bolt-on. */
@@ -251,9 +368,12 @@ function GamesShowcase() {
       eyebrow={t("games.eyebrow")}
       title={<>{t("games.title1")} <span className="text-gradient">{t("games.title2")}</span></>}
       subtitle={t("games.subtitle")}
-      className="relative"
+      className="relative isolate"
     >
-      <SectionBackdrop variant="dots" accent="#8A2EFF" />
+      <div aria-hidden className="pointer-events-none absolute inset-y-0 left-1/2 w-screen -translate-x-1/2 overflow-hidden">
+        <GridBackground />
+      </div>
+      <FloatingGameIcons variant="games" />
       <div className="relative grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
         {SHOWCASE_GAMES.map((g, i) => (
           <motion.div
@@ -341,12 +461,12 @@ function Problem() {
 function Solution() {
   const { t } = useLang();
   const pillars = [
-    { icon: Sword, title: t("solution.item1.title"), desc: t("solution.item1.desc") },
-    { icon: ShieldCheck, title: t("solution.item2.title"), desc: t("solution.item2.desc") },
-    { icon: Users, title: t("solution.item3.title"), desc: t("solution.item3.desc") },
-    { icon: Trophy, title: t("solution.item4.title"), desc: t("solution.item4.desc") },
-    { icon: Coins, title: t("solution.item5.title"), desc: t("solution.item5.desc") },
-    { icon: Zap, title: t("solution.item6.title"), desc: t("solution.item6.desc") },
+    { icon: Gamepad2, title: t("solution.item1.title"), desc: t("solution.item1.desc") },
+    { icon: Trophy, title: t("solution.item2.title"), desc: t("solution.item2.desc") },
+    { icon: Sword, title: t("solution.item3.title"), desc: t("solution.item3.desc") },
+    { icon: Coins, title: t("solution.item4.title"), desc: t("solution.item4.desc") },
+    { icon: ShieldCheck, title: t("solution.item5.title"), desc: t("solution.item5.desc") },
+    { icon: TrendingUp, title: t("solution.item6.title"), desc: t("solution.item6.desc") },
   ];
   return (
     <Section
@@ -357,7 +477,33 @@ function Solution() {
       className="relative"
     >
       <SectionBackdrop variant="scan" accent="#00B2FF" />
-      <div className="relative grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+
+      {/* The player-driven flywheel logic, spelled out as a numbered cause→effect chain
+       *  instead of a wall of stacked centered sentences — each step gets its own badge
+       *  and a connecting line, ending on a highlighted "utilization, not speculation"
+       *  punchline banner instead of just bolder text. */}
+      <div className="glass relative mx-auto mb-10 max-w-2xl rounded-3xl p-6 md:p-8">
+        {[t("solution.chain1"), t("solution.chain2"), t("solution.chain3")].map((line, i) => (
+          <div key={i} className="flex gap-4">
+            <div className="flex flex-col items-center">
+              <div
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                style={{ background: `${BRAND_ACCENTS[i]}22`, color: BRAND_ACCENTS[i] }}
+              >
+                {i + 1}
+              </div>
+              {i < 2 && <div className="my-1 w-px flex-1 bg-white/10" />}
+            </div>
+            <p className="pb-6 text-sm text-white/65 md:text-base">{line}</p>
+          </div>
+        ))}
+        <div className="flex items-center gap-3 rounded-2xl border border-[var(--neon-purple)]/30 bg-[var(--neon-purple)]/5 p-4">
+          <Zap className="h-5 w-5 shrink-0 text-[var(--neon-purple)]" />
+          <p className="text-sm font-semibold text-gradient md:text-base">{t("solution.chain4")}</p>
+        </div>
+      </div>
+
+      <div className="relative grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {pillars.map((p, i) => (
           <motion.div
             key={p.title}
@@ -453,6 +599,125 @@ function Economy() {
   );
 }
 
+function MatchFlow() {
+  const { t } = useLang();
+  const feeBreakdown = [
+    { pct: 3, title: t("matchflow.fee1.title"), desc: t("matchflow.fee1.desc"), color: "#8A2EFF" },
+    { pct: 3, title: t("matchflow.fee2.title"), desc: t("matchflow.fee2.desc"), color: "#00B2FF" },
+    { pct: 2, title: t("matchflow.fee3.title"), desc: t("matchflow.fee3.desc"), color: "#A45BFF" },
+    { pct: 2, title: t("matchflow.fee4.title"), desc: t("matchflow.fee4.desc"), color: "#5B8DEF" },
+  ];
+  return (
+    <Section
+      id="matchflow"
+      eyebrow={t("matchflow.eyebrow")}
+      title={<>{t("matchflow.title1")} <span className="text-gradient">{t("matchflow.title2")}</span>.</>}
+      subtitle={
+        <>
+          {t("matchflow.subtitle.before")}
+          <span className="font-bold text-gradient">{t("matchflow.subtitle.highlight")}</span>
+          {t("matchflow.subtitle.after")}
+        </>
+      }
+      className="relative"
+    >
+      <SectionBackdrop variant="dots" accent="#8A2EFF" />
+
+      {/* 2 players -> match -> result, mirroring the "Jogador A/B" language used in Economy
+       *  so the two sections read as the same universe, just zoomed into one match. */}
+      <div className="relative mb-4 flex flex-wrap items-center justify-center gap-3 md:gap-4">
+        <div className="glass flex flex-col items-center gap-2 rounded-2xl px-5 py-4 text-center">
+          <Users className="h-6 w-6 text-white/70" />
+          <div className="text-sm font-semibold">{t("matchflow.player1")}</div>
+        </div>
+        <ArrowRight className="h-5 w-5 shrink-0 text-white/25" />
+        <div className="glass flex flex-col items-center gap-2 rounded-2xl px-5 py-4 text-center">
+          <Users className="h-6 w-6 text-white/70" />
+          <div className="text-sm font-semibold">{t("matchflow.player2")}</div>
+        </div>
+        <ArrowRight className="h-5 w-5 shrink-0 text-white/25" />
+        <div className="glass flex flex-col items-center gap-2 rounded-2xl border border-[var(--neon-purple)]/30 px-5 py-4 text-center">
+          <Sword className="h-6 w-6 text-[var(--neon-purple)]" />
+          <div className="text-sm font-semibold">{t("matchflow.matchLabel")}</div>
+        </div>
+        <ArrowRight className="h-5 w-5 shrink-0 text-white/25" />
+        <div className="glass flex flex-col items-center gap-2 rounded-2xl border border-[var(--neon-blue)]/30 px-5 py-4 text-center">
+          <Trophy className="h-6 w-6 text-[var(--neon-blue)]" />
+          <div className="text-sm font-semibold">{t("matchflow.resultLabel")}</div>
+        </div>
+      </div>
+      <p className="relative mx-auto mb-10 max-w-2xl text-center text-sm text-white/55 md:text-base">
+        {t("matchflow.flowDesc")}
+      </p>
+
+      {/* The headline 90/10 split */}
+      <div className="relative grid gap-5 md:grid-cols-2">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5 }}
+          className="glass relative overflow-hidden rounded-3xl border border-[var(--neon-purple)]/30 p-8 text-center"
+          style={{ boxShadow: "0 18px 60px -20px rgba(138,46,255,0.5)" }}
+        >
+          <div className="mx-auto mb-4">
+            <IconBadge icon={Trophy} size="lg" spin color="#8A2EFF" />
+          </div>
+          <div className="text-5xl font-black text-gradient md:text-6xl">🏆 {t("matchflow.winnerPct")}</div>
+          <h3 className="mt-3 text-lg font-semibold md:text-xl">{t("matchflow.winnerTitle")}</h3>
+          <p className="mt-2 text-sm text-white/55">{t("matchflow.winnerDesc")}</p>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="glass relative overflow-hidden rounded-3xl border border-[var(--neon-blue)]/30 p-8 text-center"
+          style={{ boxShadow: "0 18px 60px -20px rgba(0,178,255,0.5)" }}
+        >
+          <div className="mx-auto mb-4">
+            <IconBadge icon={Zap} size="lg" spin color="#00B2FF" />
+          </div>
+          <div className="text-5xl font-black text-gradient md:text-6xl">⚡ {t("matchflow.feePct")}</div>
+          <h3 className="mt-3 text-lg font-semibold md:text-xl">{t("matchflow.feeTitle")}</h3>
+          <p className="mt-2 text-sm text-white/55">{t("matchflow.feeDesc")}</p>
+        </motion.div>
+      </div>
+
+      {/* How the 10% ecosystem fee itself breaks down: a proportional stacked bar plus a
+       *  card per allocation, so the four percentages are both felt visually and readable. */}
+      <div className="glass relative mt-8 rounded-3xl p-6 md:p-8">
+        <h4 className="text-center text-xs font-semibold uppercase tracking-widest text-white/50">
+          {t("matchflow.breakdownLabel")}
+        </h4>
+        <div className="mt-5 flex h-4 w-full overflow-hidden rounded-full bg-white/5">
+          {feeBreakdown.map((f, i) => (
+            <div key={i} style={{ width: `${(f.pct / 10) * 100}%`, background: f.color }} />
+          ))}
+        </div>
+        <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {feeBreakdown.map((f, i) => (
+            <motion.div
+              key={f.title}
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: i * 0.08 }}
+              className="text-center"
+            >
+              <div className="text-2xl font-extrabold" style={{ color: f.color }}>
+                {f.pct}%
+              </div>
+              <div className="mt-1 text-sm font-semibold">{f.title}</div>
+              <div className="mt-1 text-xs text-white/50">{f.desc}</div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </Section>
+  );
+}
+
 function Tokenomics() {
   const { t } = useLang();
   const allocations = [
@@ -485,7 +750,7 @@ function Tokenomics() {
       <div className="relative grid items-center gap-10 lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
         <div className="order-2 grid grid-cols-2 gap-4 lg:order-1">
           <Card label={t("tokenomics.supply")} value="1,000,000,000" sub="PVP" />
-          <Card label={t("tokenomics.price")} value="$0.002" sub={t("tokenomics.price.sub")} />
+          <Card label={t("tokenomics.price")} value={`$${GENESIS.price.toFixed(2)}`} sub={t("tokenomics.price.sub")} />
           <Card label={t("tokenomics.allocation")} value="100,000,000" sub={t("tokenomics.allocation.sub")} />
           <Card label={t("tokenomics.network")} value="Base" sub={t("tokenomics.network.sub")} />
         </div>
@@ -561,7 +826,7 @@ function Tiers() {
       <div className="relative grid gap-5 md:grid-cols-3 lg:grid-cols-5">
         {TIERS.map((tItem, i) => {
           const featured = tItem.name === "Gold";
-          const pvp = (tItem.min / 0.002).toLocaleString();
+          const pvp = (tItem.min / GENESIS.price).toLocaleString();
           return (
             <motion.div
               key={tItem.name}
@@ -589,11 +854,14 @@ function Tiers() {
               </div>
               <ul className="mt-5 space-y-2 text-sm text-white/65">
                 <li>• {t("tiers.benefit.nft")}</li>
-                <li>• {t("tiers.benefit.badge")}</li>
-                <li>• {t("tiers.benefit.tournament")}</li>
+                <li>• {t("tiers.benefit.fees")}</li>
+                {tItem.min >= 100 && tItem.min < 250 && <li>• {t("tiers.benefit.entries3")}</li>}
+                {tItem.min >= 250 && tItem.min < 500 && <li>• {t("tiers.benefit.entries5")}</li>}
+                {tItem.min >= 500 && tItem.min < 1000 && <li>• {t("tiers.benefit.entries7")}</li>}
+                {tItem.min >= 1000 && <li>• {t("tiers.benefit.entries10")}</li>}
                 {tItem.min >= 250 && <li>• {t("tiers.benefit.governance")}</li>}
-                {tItem.min >= 500 && <li>• {t("tiers.benefit.revshare")}</li>}
-                {tItem.min >= 1000 && <li>• {t("tiers.benefit.council")}</li>}
+                {tItem.min >= 500 && <li>• {t("tiers.benefit.earlyAccess")}</li>}
+                {tItem.min >= 1000 && <li>• {t("tiers.benefit.diamondGroup")}</li>}
               </ul>
               <Link
                 to="/genesis"
@@ -606,6 +874,17 @@ function Tiers() {
           );
         })}
       </div>
+
+      {/* Scarcity note: Genesis is a one-time window, not a recurring sale — reinforces
+       *  why locking in a tier now matters. Kept subtle: no card/border, just the icon + original type. */}
+      <div className="relative mx-auto mt-8 flex max-w-2xl items-center justify-center gap-2.5 px-4">
+        <Lock className="h-3.5 w-3.5 shrink-0 text-white/40" />
+        <p className="text-center text-xs text-white/55 md:text-sm">
+          {t("tiers.exclusivityNote.before")}
+          <span className="font-bold text-gradient">{t("tiers.exclusivityNote.highlight")}</span>
+          {t("tiers.exclusivityNote.after")}
+        </p>
+      </div>
     </Section>
   );
 }
@@ -613,11 +892,12 @@ function Tiers() {
 function Roadmap() {
   const { t } = useLang();
   const phases = [
-    { phase: "Phase 1", title: t("roadmap.p1.title"), items: [t("roadmap.p1.i1"), t("roadmap.p1.i2"), t("roadmap.p1.i3"), t("roadmap.p1.i4")], status: t("roadmap.p1.status") },
-    { phase: "Phase 2", title: t("roadmap.p2.title"), items: [t("roadmap.p2.i1"), t("roadmap.p2.i2"), t("roadmap.p2.i3")], status: t("roadmap.p2.status") },
-    { phase: "Phase 3", title: t("roadmap.p3.title"), items: [t("roadmap.p3.i1"), t("roadmap.p3.i2"), t("roadmap.p3.i3")], status: t("roadmap.p3.status") },
-    { phase: "Phase 4", title: t("roadmap.p4.title"), items: [t("roadmap.p4.i1"), t("roadmap.p4.i2"), t("roadmap.p4.i3")], status: t("roadmap.p4.status") },
-    { phase: "Phase 5", title: t("roadmap.p5.title"), items: [t("roadmap.p5.i1"), t("roadmap.p5.i2"), t("roadmap.p5.i3")], status: t("roadmap.p5.status") },
+    { phase: t("roadmap.p1.phase"), title: t("roadmap.p1.title"), items: [t("roadmap.p1.i1"), t("roadmap.p1.i2"), t("roadmap.p1.i3"), t("roadmap.p1.i4")], status: t("roadmap.p1.status") },
+    { phase: t("roadmap.p2.phase"), title: t("roadmap.p2.title"), items: [t("roadmap.p2.i1"), t("roadmap.p2.i2"), t("roadmap.p2.i3"), t("roadmap.p2.i4"), t("roadmap.p2.i5"), t("roadmap.p2.i6")], status: t("roadmap.p2.status") },
+    { phase: t("roadmap.p3.phase"), title: t("roadmap.p3.title"), items: [t("roadmap.p3.i1"), t("roadmap.p3.i2"), t("roadmap.p3.i3"), t("roadmap.p3.i4"), t("roadmap.p3.i5"), t("roadmap.p3.i6")], status: t("roadmap.p3.status") },
+    { phase: t("roadmap.p4.phase"), title: t("roadmap.p4.title"), items: [t("roadmap.p4.i1"), t("roadmap.p4.i2"), t("roadmap.p4.i3"), t("roadmap.p4.i4"), t("roadmap.p4.i5"), t("roadmap.p4.i6")], status: t("roadmap.p4.status") },
+    { phase: t("roadmap.p5.phase"), title: t("roadmap.p5.title"), items: [t("roadmap.p5.i1"), t("roadmap.p5.i2"), t("roadmap.p5.i3"), t("roadmap.p5.i4"), t("roadmap.p5.i5"), t("roadmap.p5.i6")], status: t("roadmap.p5.status") },
+    { phase: t("roadmap.p6.phase"), title: t("roadmap.p6.title"), items: [t("roadmap.p6.i1"), t("roadmap.p6.i2"), t("roadmap.p6.i3"), t("roadmap.p6.i4"), t("roadmap.p6.i5")], status: t("roadmap.p6.status") },
   ];
   return (
     <Section
@@ -674,6 +954,7 @@ function FAQ() {
     { q: t("faq.q4"), a: t("faq.a4") },
     { q: t("faq.q5"), a: t("faq.a5") },
     { q: t("faq.q6"), a: t("faq.a6") },
+    { q: t("faq.q7"), a: t("faq.a7") },
   ];
   const [open, setOpen] = useState<number | null>(0);
   return (

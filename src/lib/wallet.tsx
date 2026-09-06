@@ -173,7 +173,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }
 
   function buy(amountUsd: number) {
-    const pvp = Math.floor(amountUsd / 0.002);
+    const pvp = Math.floor(amountUsd / GENESIS.price);
     setInvested((v) => v + amountUsd);
     setReserved((v) => v + pvp);
     setTxs((v) => [
@@ -217,9 +217,16 @@ export function shortAddr(a: string) {
 }
 
 export const GENESIS = {
-  price: 0.002,
+  price: 0.1,
   hardCap: 10_000_000,
   genesisAllocation: 100_000_000,
   supply: 1_000_000_000,
   launchDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 45).toISOString(),
+  // Placeholder — total raised so far, shared so the home hero and the Genesis page
+  // always show the same live number.
+  raised: 3_247_850.0,
+  // Genesis Founder positions are capped and sold on a first-come basis — shared here
+  // so the home hero and the Genesis page always show the same live count.
+  foundersSold: 6512,
+  foundersTotal: 20_000,
 };

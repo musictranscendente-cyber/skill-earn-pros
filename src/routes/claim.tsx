@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Layout } from "@/components/Layout";
 import { GridBackground } from "@/components/Background";
-import { Countdown } from "@/components/Countdown";
-import { useWallet, GENESIS } from "@/lib/wallet";
+import { useWallet } from "@/lib/wallet";
 import { WalletButton } from "@/components/WalletButton";
 import { Lock, Sparkles } from "lucide-react";
 import { useLang } from "@/lib/i18n";
@@ -39,11 +38,6 @@ function Claim() {
             <div className="mt-8 grid gap-4 md:grid-cols-2">
               <Box label={t("claim.reserved.label")} value={`${reservedPvp.toLocaleString()} PVP`} />
               <Box label={t("claim.status.label")} value={t("claim.status.value")} />
-            </div>
-
-            <div className="mt-6">
-              <div className="text-xs uppercase tracking-widest text-white/50">{t("claim.unlocks")}</div>
-              <div className="mt-3"><Countdown to={GENESIS.launchDate} /></div>
             </div>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">

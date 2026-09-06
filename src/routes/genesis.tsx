@@ -4,10 +4,9 @@ import * as SliderPrimitive from "@radix-ui/react-slider";
 import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { GridBackground } from "@/components/Background";
-import { Countdown } from "@/components/Countdown";
 import { TIERS, GENESIS, tierFor, useWallet } from "@/lib/wallet";
 import { WalletButton } from "@/components/WalletButton";
-import { Check, Flame, Star, Shield, Award, Trophy, Gem, Clock, TrendingUp, type LucideIcon } from "lucide-react";
+import { Check, Flame, Star, Shield, Award, Trophy, Gem, AlertTriangle, TrendingUp, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useLang } from "@/lib/i18n";
 
@@ -73,15 +72,17 @@ function GenesisPage() {
   }, [searchParams.amount]);
   const tier = tierFor(amount);
   const pvp = Math.floor(amount / GENESIS.price);
-  const raised = 3_247_891.63;
+  const raised = GENESIS.raised;
   const pct = Math.min(100, (raised / GENESIS.hardCap) * 100);
+  // Genesis Founder positions are capped and sold on a first-come basis — a hard
+  // number (not a countdown) is what actually conveys "limited and won't repeat."
+  const unitsSold = GENESIS.foundersSold;
+  const unitsTotal = GENESIS.foundersTotal;
+  const unitsPct = Math.min(100, (unitsSold / unitsTotal) * 100);
   const TierIcon = TIER_ICONS[tier?.name ?? "Starter"] ?? Star;
   const accent = tier?.color ?? "#8A2EFF";
   /** No tier reached (below Starter's $50 minimum) → no neon at all, just a plain box. */
   const hasTier = tier !== null;
-  /** Silver's flat #c0c0c0 has almost no saturation — as a solid button fill it reads as a
-   *  dull, disabled grey rather than a shiny metal, so it gets a cooler gradient below. */
-  const isSilver = tier?.name === "Silver";
 
   function submit() {
     if (!address) return toast.error(t("genesis.toast.connect"));
@@ -240,7 +241,7 @@ function GenesisPage() {
                     <AnimatedNumber value={pvp} />
                     <span className="text-sm font-semibold text-white/50">PVP</span>
                   </div>
-                  <div className="mt-1 text-xs text-white/40">{t("genesis.price")}: ${GENESIS.price} / PVP</div>
+                  <div className="mt-1 text-xs text-white/40">{t("genesis.price")}: ${GENESIS.price.toFixed(2)} / PVP</div>
                 </div>
                 <AnimatePresence mode="wait">
                   <motion.div
@@ -262,30 +263,19 @@ function GenesisPage() {
 
               <motion.button
                 onClick={submit}
-                className="btn-neon btn-neon-hover relative mt-6 w-full overflow-hidden transition-[background] duration-500"
-                style={
-                  hasTier
-                    ? {
-                        background: isSilver
-                          ? // Cooler, brighter "chrome" gradient instead of flat grey → white.
-                            `linear-gradient(135deg, ${accent} 0%, color-mix(in srgb, ${accent} 55%, #475569) 40%, color-mix(in srgb, ${accent} 60%, var(--neon-blue)) 75%, color-mix(in srgb, ${accent} 35%, white) 130%)`
-                          : `linear-gradient(135deg, ${accent} 0%, color-mix(in srgb, ${accent} 65%, black) 60%, color-mix(in srgb, ${accent} 55%, white) 130%)`,
-                      }
-                    : undefined
-                }
-                // Gentle breathing glow — a subtle, tasteful nudge toward the CTA rather than
-                // a jarring size-pulse (which would also jitter the layout around it).
+                className="btn-neon btn-neon-hover relative mt-6 w-full overflow-hidden"
+                // Kept on the fixed brand gradient regardless of the selected tier —
+                // the CTA's look should stay consistent, not repaint per tier color.
                 animate={{
                   boxShadow: [
-                    `0 10px 30px -10px color-mix(in srgb, ${accent} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.25)`,
-                    `0 16px 44px -6px color-mix(in srgb, ${accent} 80%, transparent), inset 0 1px 0 rgba(255,255,255,0.4)`,
-                    `0 10px 30px -10px color-mix(in srgb, ${accent} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.25)`,
+                    "0 10px 30px -10px rgba(138,46,255,0.45), inset 0 1px 0 rgba(255,255,255,0.25)",
+                    "0 16px 44px -6px rgba(138,46,255,0.8), inset 0 1px 0 rgba(255,255,255,0.4)",
+                    "0 10px 30px -10px rgba(138,46,255,0.45), inset 0 1px 0 rgba(255,255,255,0.25)",
                   ],
                 }}
                 transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
               >
-                {/* Diagonal light sweep — reinforces "click me" and, for Silver especially,
-                    is what actually sells the "shiny metal" look a flat fill can't. */}
+                {/* Diagonal light sweep — reinforces "click me". */}
                 <span
                   aria-hidden
                   className="pointer-events-none absolute inset-0"
@@ -304,7 +294,6 @@ function GenesisPage() {
                   <WalletButton />
                 </div>
               )}
-              <p className="mt-3 text-center text-xs text-white/40">{t("genesis.demo.note")}</p>
                 </div>
               </div>
             </motion.div>
@@ -340,36 +329,117 @@ function GenesisPage() {
                 </div>
               </motion.div>
               <div className="glass rounded-3xl p-6">
-                <div className="flex items-center gap-1.5 text-xs uppercase tracking-widest text-white/50">
-                  <Clock className="h-3.5 w-3.5" /> {t("genesis.countdown.label")}
+                <div className="mb-3 flex items-center justify-between text-xs uppercase tracking-widest text-white/50">
+                  <span className="flex items-center gap-1.5">
+                    <Flame className="h-3.5 w-3.5 text-[var(--neon-purple)]" /> {t("genesis.unitsSold.label")}
+                  </span>
+                  <span className="text-silver font-bold">
+                    <AnimatedNumber value={unitsPct} decimals={1} />%
+                  </span>
                 </div>
-                <div className="mt-3"><Countdown to={GENESIS.launchDate} /></div>
+                <div className="relative h-2.5 overflow-hidden rounded-full bg-white/[0.06]">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${unitsPct}%` }}
+                    transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+                    className="relative h-full overflow-hidden rounded-full bg-gradient-to-r from-[var(--neon-purple)] to-[var(--neon-blue)] shadow-[0_0_24px_rgba(138,46,255,0.6)]"
+                  >
+                    <motion.div
+                      aria-hidden
+                      animate={{ x: ["-100%", "220%"] }}
+                      transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                      className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                    />
+                  </motion.div>
+                </div>
+                <div className="mt-3 flex justify-between text-sm text-white/70">
+                  <span>{unitsSold.toLocaleString()} {t("genesis.unitsSold.soldSuffix")}</span>
+                  <span>{unitsTotal.toLocaleString()} {t("genesis.unitsSold.totalSuffix")}</span>
+                </div>
+                <div className="mt-3 flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/5 px-3 py-2 text-xs text-red-200/80">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  {t("genesis.unitsSold.warning")}
+                </div>
               </div>
-              <div className="glass rounded-3xl p-6">
-                <div className="mb-3 text-xs uppercase tracking-widest text-white/50">{t("genesis.tier.ladder")}</div>
-                <div className="space-y-2">
-                  {TIERS.map((tr) => {
-                    const Icon = TIER_ICONS[tr.name] ?? Star;
-                    const active = tier?.name === tr.name;
-                    return (
-                      <button
-                        key={tr.name}
-                        onClick={() => setAmount(tr.min)}
-                        className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm transition ${
-                          active
-                            ? "bg-[var(--neon-purple)]/15 ring-1 ring-[var(--neon-purple)]/50"
-                            : "hover:bg-white/[0.04]"
-                        }`}
-                      >
-                        <span className="flex items-center gap-2.5">
-                          <Icon className="h-3.5 w-3.5" style={{ color: tr.color }} />
-                          {tr.name}
-                          {active && <Check className="h-3 w-3 text-[var(--neon-purple)]" />}
-                        </span>
-                        <span className="text-white/60">${tr.min}+</span>
-                      </button>
-                    );
-                  })}
+              <div className="relative">
+                {/* Same treatment as the investment-amount card: a soft glow behind the edge... */}
+                {hasTier && (
+                  <div
+                    aria-hidden
+                    className="absolute -inset-0.5 rounded-[1.6rem] opacity-[0.18] blur-sm transition-opacity duration-500"
+                    style={{
+                      background: `linear-gradient(115deg, ${accent}, color-mix(in srgb, ${accent} 55%, white))`,
+                      animation: "pvp-pulse-glow 3.5s ease-in-out infinite",
+                    }}
+                  />
+                )}
+                {/* ...and a flowing tier-colored border once a tier is reached, plain neutral otherwise. */}
+                <div
+                  className="relative overflow-hidden rounded-3xl p-[2px] transition-[background] duration-500"
+                  style={
+                    hasTier
+                      ? {
+                          backgroundImage: `linear-gradient(90deg, color-mix(in srgb, ${accent} 70%, transparent), color-mix(in srgb, ${accent} 25%, white), color-mix(in srgb, ${accent} 70%, transparent), color-mix(in srgb, ${accent} 20%, black), color-mix(in srgb, ${accent} 70%, transparent))`,
+                          backgroundSize: "300% 100%",
+                          animation: "pvp-border-flow 6s linear infinite",
+                        }
+                      : { background: "rgba(255,255,255,0.1)" }
+                  }
+                >
+                  <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a0c2e] via-[#0d1220] to-[#041824] p-6 backdrop-blur-xl">
+                <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-widest text-white/50">
+                  <TierIcon className="h-3.5 w-3.5" style={{ color: accent }} />
+                  {t("genesis.tier.ladder")}
+                  {hasTier && <span style={{ color: accent }}>— {tier!.name}</span>}
+                </div>
+                {hasTier ? (
+                  <ul className="space-y-2.5 text-sm text-white/70">
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: accent }} /> {t("tiers.benefit.nft")}
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: accent }} /> {t("tiers.benefit.fees")}
+                    </li>
+                    {tier!.min >= 100 && tier!.min < 250 && (
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: accent }} /> {t("tiers.benefit.entries3")}
+                      </li>
+                    )}
+                    {tier!.min >= 250 && tier!.min < 500 && (
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: accent }} /> {t("tiers.benefit.entries5")}
+                      </li>
+                    )}
+                    {tier!.min >= 500 && tier!.min < 1000 && (
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: accent }} /> {t("tiers.benefit.entries7")}
+                      </li>
+                    )}
+                    {tier!.min >= 1000 && (
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: accent }} /> {t("tiers.benefit.entries10")}
+                      </li>
+                    )}
+                    {tier!.min >= 250 && (
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: accent }} /> {t("tiers.benefit.governance")}
+                      </li>
+                    )}
+                    {tier!.min >= 500 && (
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: accent }} /> {t("tiers.benefit.earlyAccess")}
+                      </li>
+                    )}
+                    {tier!.min >= 1000 && (
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: accent }} /> {t("tiers.benefit.diamondGroup")}
+                      </li>
+                    )}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-white/40">{t("genesis.tier.benefits.empty")}</p>
+                )}
+                  </div>
                 </div>
               </div>
             </div>

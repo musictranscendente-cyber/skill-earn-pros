@@ -22,6 +22,15 @@ export function LanguageToggle() {
       >
         EN
       </button>
+      <button
+        onClick={() => setLang("es")}
+        aria-label="Español"
+        className={`rounded-full px-2.5 py-1 transition ${
+          lang === "es" ? "bg-white/10 text-white" : "text-white/50 hover:text-white"
+        }`}
+      >
+        ES
+      </button>
     </div>
   );
 }

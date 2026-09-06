@@ -1,10 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Layout } from "@/components/Layout";
 import { GridBackground } from "@/components/Background";
-import { useWallet, tierFor, shortAddr, GENESIS } from "@/lib/wallet";
+import { useWallet, tierFor, shortAddr } from "@/lib/wallet";
 import { WalletButton } from "@/components/WalletButton";
-import { Countdown } from "@/components/Countdown";
-import { Wallet, Trophy, Coins, Clock, ExternalLink, Star, Shield, Award, Gem, type LucideIcon } from "lucide-react";
+import { Wallet, Trophy, Coins, Clock, Check, ExternalLink, Star, Shield, Award, Gem, type LucideIcon } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 /** Same mapping used on the Genesis page — keeps the tier's icon consistent site-wide. */
@@ -121,19 +120,64 @@ function Dashboard() {
             <div className="space-y-5">
               <div className="glass rounded-3xl p-6">
                 <div className="text-xs uppercase tracking-widest text-white/50">{t("dashboard.claim.opens")}</div>
-                <div className="mt-3"><Countdown to={GENESIS.launchDate} /></div>
                 <Link to="/claim" className="btn-ghost btn-ghost-hover mt-4 w-full text-sm">{t("dashboard.claim.goto")}</Link>
               </div>
               <div className="glass rounded-3xl p-6">
-                <div className="text-xs uppercase tracking-widest text-white/50">{t("dashboard.perks.title")}</div>
-                <ul className="mt-3 space-y-2 text-sm text-white/70">
-                  <li>• {t("dashboard.perks.badge")}</li>
-                  <li>• {t("dashboard.perks.nft")}</li>
-                  <li>• {t("dashboard.perks.tournament")}</li>
-                  {tier && tier.min >= 250 && <li>• {t("dashboard.perks.governance")}</li>}
-                  {tier && tier.min >= 500 && <li>• {t("dashboard.perks.revshare")}</li>}
-                  {tier && tier.min >= 1000 && <li>• {t("dashboard.perks.council")}</li>}
-                </ul>
+                <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-white/50">
+                  {tier && (() => {
+                    const PerksIcon = TIER_ICONS[tier.name] ?? Star;
+                    return <PerksIcon className="h-3.5 w-3.5" style={{ color: tier.color }} />;
+                  })()}
+                  {t("dashboard.perks.title")}
+                  {tier && <span style={{ color: tier.color }}>— {tier.name}</span>}
+                </div>
+                {tier ? (
+                  <ul className="mt-3 space-y-2 text-sm text-white/70">
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: tier.color }} /> {t("tiers.benefit.nft")}
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: tier.color }} /> {t("tiers.benefit.fees")}
+                    </li>
+                    {tier.min >= 100 && tier.min < 250 && (
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: tier.color }} /> {t("tiers.benefit.entries3")}
+                      </li>
+                    )}
+                    {tier.min >= 250 && tier.min < 500 && (
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: tier.color }} /> {t("tiers.benefit.entries5")}
+                      </li>
+                    )}
+                    {tier.min >= 500 && tier.min < 1000 && (
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: tier.color }} /> {t("tiers.benefit.entries7")}
+                      </li>
+                    )}
+                    {tier.min >= 1000 && (
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: tier.color }} /> {t("tiers.benefit.entries10")}
+                      </li>
+                    )}
+                    {tier.min >= 250 && (
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: tier.color }} /> {t("tiers.benefit.governance")}
+                      </li>
+                    )}
+                    {tier.min >= 500 && (
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: tier.color }} /> {t("tiers.benefit.earlyAccess")}
+                      </li>
+                    )}
+                    {tier.min >= 1000 && (
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: tier.color }} /> {t("tiers.benefit.diamondGroup")}
+                      </li>
+                    )}
+                  </ul>
+                ) : (
+                  <p className="mt-3 text-sm text-white/40">{t("dashboard.perks.empty")}</p>
+                )}
               </div>
             </div>
           </div>

@@ -260,6 +260,7 @@ function PlayPage() {
               <span className="text-silver">{t("play.title1")}</span> <span className="text-gradient">{t("play.title2")}</span>
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-white/60">{t("play.subtitle")}</p>
+            <p className="mt-3 text-sm font-bold uppercase tracking-[0.15em] text-gradient">{t("play.tagline")}</p>
           </div>
 
           <AnimatePresence mode="wait">

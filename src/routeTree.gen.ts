@@ -15,6 +15,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as GenesisRouteImport } from './routes/genesis'
 import { Route as PlayRouteImport } from './routes/play'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as WhitepaperRouteImport } from './routes/whitepaper'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +47,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WhitepaperRoute = WhitepaperRouteImport.update({
+  id: '/whitepaper',
+  path: '/whitepaper',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/genesis': typeof GenesisRoute
   '/play': typeof PlayRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/whitepaper': typeof WhitepaperRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/genesis': typeof GenesisRoute
   '/play': typeof PlayRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/whitepaper': typeof WhitepaperRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,13 +79,27 @@ export interface FileRoutesById {
   '/genesis': typeof GenesisRoute
   '/play': typeof PlayRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/whitepaper': typeof WhitepaperRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/claim' | '/dashboard' | '/genesis' | '/play' | '/sitemap.xml'
+    | '/'
+    | '/claim'
+    | '/dashboard'
+    | '/genesis'
+    | '/play'
+    | '/sitemap.xml'
+    | '/whitepaper'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/claim' | '/dashboard' | '/genesis' | '/play' | '/sitemap.xml'
+  to:
+    | '/'
+    | '/claim'
+    | '/dashboard'
+    | '/genesis'
+    | '/play'
+    | '/sitemap.xml'
+    | '/whitepaper'
   id:
     | '__root__'
     | '/'
@@ -86,6 +108,7 @@ export interface FileRouteTypes {
     | '/genesis'
     | '/play'
     | '/sitemap.xml'
+    | '/whitepaper'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -95,6 +118,7 @@ export interface RootRouteChildren {
   GenesisRoute: typeof GenesisRoute
   PlayRoute: typeof PlayRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  WhitepaperRoute: typeof WhitepaperRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -141,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/whitepaper': {
+      id: '/whitepaper'
+      path: '/whitepaper'
+      fullPath: '/whitepaper'
+      preLoaderRoute: typeof WhitepaperRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -151,6 +182,7 @@ const rootRouteChildren: RootRouteChildren = {
   GenesisRoute: GenesisRoute,
   PlayRoute: PlayRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  WhitepaperRoute: WhitepaperRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

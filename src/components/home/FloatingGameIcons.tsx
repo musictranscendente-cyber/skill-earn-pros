@@ -47,6 +47,18 @@ const HERO_PIECES: Piece[] = [
   { Thumb: DominoSilhouette, top: "68%", left: "84%", size: 110, rotate: -10, delay: 1.6, duration: 6.5, color: "#60d9ff" },
 ];
 
+// Same 4 pieces as HERO_PIECES, but pinned to the very top/bottom edges of the section
+// instead of mid-height — the Games Library section is a dense card grid, so the hero
+// positions (which assume a two-column layout with open space mid-section) would land
+// two of the pieces right behind the game cards. Keeping them in the header/footer
+// margins avoids that overlap entirely.
+const GAMES_PIECES: Piece[] = [
+  { Thumb: ChessPieceSilhouette, top: "6%", left: "3%", size: 120, rotate: -9, delay: 0, duration: 7.5, color: "#a78bfa" },
+  { Thumb: ControllerSilhouette, top: "6%", left: "86%", size: 110, rotate: 10, delay: 0.6, duration: 7, color: "#8A2EFF" },
+  { Thumb: CardsSilhouette, top: "86%", left: "5%", size: 110, rotate: 8, delay: 1, duration: 8, color: "#00B2FF" },
+  { Thumb: DominoSilhouette, top: "86%", left: "84%", size: 100, rotate: -10, delay: 1.6, duration: 6.5, color: "#60d9ff" },
+];
+
 const SUBTLE_PIECES: Piece[] = [
   { Thumb: SudokuThumb, top: "78%", left: "93%", size: 44, rotate: 12, delay: 1, duration: 8 },
   { Thumb: CheckersThumb, top: "82%", left: "3%", size: 36, rotate: 8, delay: 2, duration: 6.5 },
@@ -57,11 +69,11 @@ const RIGHT_ONLY_PIECES: Piece[] = [
   { Thumb: DiceThumb, top: "78%", left: "94%", size: 38, rotate: 8, delay: 1.6, duration: 6.4 },
 ];
 
-const VARIANTS = { hero: HERO_PIECES, subtle: SUBTLE_PIECES, right: RIGHT_ONLY_PIECES };
+const VARIANTS = { hero: HERO_PIECES, games: GAMES_PIECES, subtle: SUBTLE_PIECES, right: RIGHT_ONLY_PIECES };
 
 export function FloatingGameIcons({ variant = "subtle" }: { variant?: keyof typeof VARIANTS }) {
   const pieces = VARIANTS[variant];
-  const opacity = variant === "hero" ? 0.26 : 0.09;
+  const opacity = variant === "hero" || variant === "games" ? 0.26 : 0.09;
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       {pieces.map((p, i) => (
@@ -75,7 +87,7 @@ export function FloatingGameIcons({ variant = "subtle" }: { variant?: keyof type
         >
           <p.Thumb
             className={`h-full w-full ${
-              variant === "hero" ? "drop-shadow-[0_0_26px_rgba(138,46,255,0.45)]" : "drop-shadow-[0_0_18px_rgba(138,46,255,0.3)]"
+              variant === "hero" || variant === "games" ? "drop-shadow-[0_0_26px_rgba(138,46,255,0.45)]" : "drop-shadow-[0_0_18px_rgba(138,46,255,0.3)]"
             }`}
           />
         </motion.div>
