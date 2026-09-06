@@ -20,7 +20,11 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/5 bg-[#070B14]/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
-        <Link to="/" className="shrink-0 transition hover:opacity-80">
+        <Link
+          to="/"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="shrink-0 transition hover:opacity-80"
+        >
           <Logo />
         </Link>
         <nav className="hidden items-center gap-1 md:flex">

@@ -23,7 +23,13 @@ export function Footer() {
     <footer className="border-t border-white/5 bg-[#050811]/80 mt-32">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-14 md:grid-cols-4">
         <div className="md:col-span-2">
-          <Logo />
+          <Link
+            to="/"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="inline-block transition hover:opacity-80"
+          >
+            <Logo />
+          </Link>
           <p className="mt-4 max-w-sm text-sm text-white/60">
             {t("footer.tagline")}
           </p>
