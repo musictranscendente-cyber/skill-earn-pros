@@ -111,15 +111,17 @@ function Hero() {
     <section className="relative isolate overflow-hidden pt-20 pb-14 md:pt-32 md:pb-20">
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         {/* The video is a wide cinematic shot — cover-fitting it into a narrow, tall mobile
-         *  hero forces a heavy zoom that reads as broken. Simpler to swap it for the same
-         *  grid backdrop used elsewhere on mobile, and only show the video from md up where
-         *  the hero is wide enough for it to sit naturally. */}
+         *  hero forces a heavy zoom that reads as broken. A static photo crops far more
+         *  gracefully onto a portrait screen, so mobile gets a still frame instead and only
+         *  shows the video from md up where the hero is wide enough for it to sit naturally. */}
         <div className="hidden h-full w-full md:block">
           <LoopingBgVideo />
         </div>
-        <div className="md:hidden">
-          <GridBackground />
-        </div>
+        <img
+          src="/hero-bg-mobile.jpg"
+          alt=""
+          className="h-full w-full object-cover opacity-40 md:hidden"
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent from-5% via-[#05050a]/60 via-30% to-[#05050a]/85" />
       </div>
       <div className="relative mx-auto max-w-7xl px-6">

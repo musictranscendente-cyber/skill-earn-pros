@@ -25,7 +25,7 @@ export function Footer() {
         <div className="md:col-span-2">
           <Link
             to="/"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            onClick={() => requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }))}
             className="inline-block transition hover:opacity-80"
           >
             <Logo />
