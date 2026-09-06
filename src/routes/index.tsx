@@ -457,11 +457,11 @@ function Problem() {
           >
             <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[var(--neon-purple)]/10 blur-2xl transition group-hover:bg-[var(--neon-purple)]/30" />
             <div className="relative">
-              <div className="mb-4">
+              <div className="mb-4 flex justify-center">
                 <IconBadge icon={it.icon} size="md" shape="hex" color={PROBLEM_ACCENTS[i % PROBLEM_ACCENTS.length]} />
               </div>
-              <h3 className="text-lg font-semibold">{it.title}</h3>
-              <p className="mt-2 text-sm text-white/55">{it.desc}</p>
+              <h3 className="text-center text-lg font-semibold">{it.title}</h3>
+              <p className="mt-2 text-center text-sm text-white/55">{it.desc}</p>
             </div>
           </motion.div>
         ))}
@@ -526,11 +526,11 @@ function Solution() {
             className="glass group relative overflow-hidden rounded-2xl p-6 transition hover:-translate-y-1 hover:border-[var(--neon-purple)]/40"
           >
             <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[var(--neon-blue)]/10 blur-2xl transition group-hover:bg-[var(--neon-blue)]/30" />
-            <div className="relative mb-4">
+            <div className="relative mb-4 flex justify-center">
               <IconBadge icon={p.icon} size="md" spin color={BRAND_ACCENTS[i % BRAND_ACCENTS.length]} />
             </div>
-            <h3 className="relative text-lg font-semibold">{p.title}</h3>
-            <p className="mt-2 text-sm text-white/55">{p.desc}</p>
+            <h3 className="relative text-center text-lg font-semibold">{p.title}</h3>
+            <p className="mt-2 text-center text-sm text-white/55">{p.desc}</p>
           </motion.div>
         ))}
       </div>
@@ -636,27 +636,29 @@ function MatchFlow() {
       <SectionBackdrop variant="dots" accent="#8A2EFF" />
 
       {/* 2 players -> match -> result, mirroring the "Jogador A/B" language used in Economy
-       *  so the two sections read as the same universe, just zoomed into one match. */}
-      <div className="relative mb-4 flex flex-wrap items-center justify-center gap-3 md:gap-4">
-        <div className="glass flex flex-col items-center gap-2 rounded-2xl px-5 py-4 text-center">
-          <Users className="h-6 w-6 text-white/70" />
-          <div className="text-sm font-semibold">{t("matchflow.player1")}</div>
-        </div>
-        <ArrowRight className="h-5 w-5 shrink-0 text-white/25" />
-        <div className="glass flex flex-col items-center gap-2 rounded-2xl px-5 py-4 text-center">
-          <Users className="h-6 w-6 text-white/70" />
-          <div className="text-sm font-semibold">{t("matchflow.player2")}</div>
-        </div>
-        <ArrowRight className="h-5 w-5 shrink-0 text-white/25" />
-        <div className="glass flex flex-col items-center gap-2 rounded-2xl border border-[var(--neon-purple)]/30 px-5 py-4 text-center">
-          <Sword className="h-6 w-6 text-[var(--neon-purple)]" />
-          <div className="text-sm font-semibold">{t("matchflow.matchLabel")}</div>
-        </div>
-        <ArrowRight className="h-5 w-5 shrink-0 text-white/25" />
-        <div className="glass flex flex-col items-center gap-2 rounded-2xl border border-[var(--neon-blue)]/30 px-5 py-4 text-center">
-          <Trophy className="h-6 w-6 text-[var(--neon-blue)]" />
-          <div className="text-sm font-semibold">{t("matchflow.resultLabel")}</div>
-        </div>
+       *  so the two sections read as the same universe, just zoomed into one match.
+       *  Stacked + arrow-down on mobile (matching the Economy flow's pattern) instead of a
+       *  flex-wrap row, whose uneven line breaks left a stray arrow floating off-center. */}
+      <div className="relative mx-auto mb-4 flex max-w-xs flex-col items-center gap-2 sm:max-w-none sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4">
+        {[
+          { icon: Users, label: t("matchflow.player1"), iconClass: "text-white/70", border: "" },
+          { icon: Users, label: t("matchflow.player2"), iconClass: "text-white/70", border: "" },
+          { icon: Sword, label: t("matchflow.matchLabel"), iconClass: "text-[var(--neon-purple)]", border: "border border-[var(--neon-purple)]/30" },
+          { icon: Trophy, label: t("matchflow.resultLabel"), iconClass: "text-[var(--neon-blue)]", border: "border border-[var(--neon-blue)]/30" },
+        ].map((step, i, steps) => (
+          <div key={step.label} className="flex flex-col items-center gap-2 sm:flex-row sm:gap-4">
+            <div className={`glass flex flex-col items-center gap-2 rounded-2xl px-5 py-4 text-center ${step.border}`}>
+              <step.icon className={`h-6 w-6 ${step.iconClass}`} />
+              <div className="text-sm font-semibold">{step.label}</div>
+            </div>
+            {i < steps.length - 1 && (
+              <>
+                <ArrowDown className="h-5 w-5 shrink-0 text-white/25 sm:hidden" />
+                <ArrowRight className="hidden h-5 w-5 shrink-0 text-white/25 sm:block" />
+              </>
+            )}
+          </div>
+        ))}
       </div>
       <p className="relative mx-auto mb-10 max-w-2xl text-center text-sm text-white/55 md:text-base">
         {t("matchflow.flowDesc")}
@@ -672,7 +674,7 @@ function MatchFlow() {
           className="glass relative overflow-hidden rounded-3xl border border-[var(--neon-purple)]/30 p-8 text-center"
           style={{ boxShadow: "0 18px 60px -20px rgba(138,46,255,0.5)" }}
         >
-          <div className="mx-auto mb-4">
+          <div className="mb-4 flex justify-center">
             <IconBadge icon={Trophy} size="lg" spin color="#8A2EFF" />
           </div>
           <div className="text-5xl font-black text-gradient md:text-6xl">🏆 {t("matchflow.winnerPct")}</div>
@@ -687,7 +689,7 @@ function MatchFlow() {
           className="glass relative overflow-hidden rounded-3xl border border-[var(--neon-blue)]/30 p-8 text-center"
           style={{ boxShadow: "0 18px 60px -20px rgba(0,178,255,0.5)" }}
         >
-          <div className="mx-auto mb-4">
+          <div className="mb-4 flex justify-center">
             <IconBadge icon={Zap} size="lg" spin color="#00B2FF" />
           </div>
           <div className="text-5xl font-black text-gradient md:text-6xl">⚡ {t("matchflow.feePct")}</div>
