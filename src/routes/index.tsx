@@ -120,7 +120,7 @@ function Hero() {
         <img
           src="/hero-bg-mobile.jpg"
           alt=""
-          className="h-full w-full object-cover opacity-40 md:hidden"
+          className="h-full w-full object-cover opacity-25 md:hidden"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent from-5% via-[#05050a]/60 via-30% to-[#05050a]/85" />
       </div>
@@ -384,7 +384,8 @@ function GamesShowcase() {
       <div aria-hidden className="pointer-events-none absolute inset-y-0 left-1/2 w-screen -translate-x-1/2 overflow-hidden">
         <GridBackground />
       </div>
-      <FloatingGameIcons variant="games" />
+      <FloatingGameIcons variant="games" className="hidden md:block" />
+      <FloatingGameIcons variant="gamesMobile" className="md:hidden" />
       <div className="relative grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
         {SHOWCASE_GAMES.map((g, i) => (
           <motion.div
