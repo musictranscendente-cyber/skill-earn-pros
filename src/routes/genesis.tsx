@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { GridBackground } from "@/components/Background";
-import { TIERS, GENESIS, tierFor, useWallet } from "@/lib/wallet";
+import { TIERS, GENESIS, tierFor, useWallet, useLiveRaised, useLiveFoundersSold, ASSETS, assetConfigured, BUY_ERROR, type AssetKey } from "@/lib/wallet";
 import { WalletButton } from "@/components/WalletButton";
-import { Check, Flame, Star, Shield, Award, Trophy, Gem, AlertTriangle, TrendingUp, type LucideIcon } from "lucide-react";
+import { LeadCapture } from "@/components/LeadCapture";
+import { Check, Flame, Star, Shield, Award, Trophy, Gem, AlertTriangle, TrendingUp, Loader2, Info, ChevronDown, ExternalLink, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useLang } from "@/lib/i18n";
 
@@ -42,6 +43,7 @@ const TIER_ICONS: Record<string, LucideIcon> = {
 const POPULAR_TIER = "Gold";
 const SLIDER_MIN = 10;
 const SLIDER_MAX = 2000;
+const ASSET_ORDER: AssetKey[] = ["ETH", "USDC", "USDT", "BTC"];
 
 /** Rolling/spring-driven number — makes the "you receive" figure feel alive instead of a static label. */
 function AnimatedNumber({ value, decimals = 0 }: { value: number; decimals?: number }) {
@@ -60,9 +62,15 @@ function AnimatedNumber({ value, decimals = 0 }: { value: number; decimals?: num
 
 function GenesisPage() {
   const { t } = useLang();
-  const { address, buy } = useWallet();
+  const { address, buy, onChainReady, buying, buyStep, wrongNetwork, switchToBase } = useWallet();
   const searchParams = Route.useSearch();
   const [amount, setAmount] = useState(() => searchParams.amount ?? 500);
+  const [asset, setAsset] = useState<AssetKey>("USDC");
+  const [showBridgeHelp, setShowBridgeHelp] = useState(false);
+
+  // Only offer assets the site actually has an address for (see genesisContract.ts) — until
+  // the two MockERC20 addresses are pasted in after deploy, USDT/BTC just don't show up here.
+  const availableAssets = useMemo(() => ASSET_ORDER.filter((a) => assetConfigured(a)), []);
 
   // Also react to the search param changing while already on this page (e.g. clicking a
   // different tier card from another route without a full remount).
@@ -72,11 +80,11 @@ function GenesisPage() {
   }, [searchParams.amount]);
   const tier = tierFor(amount);
   const pvp = Math.floor(amount / GENESIS.price);
-  const raised = GENESIS.raised;
+  const raised = useLiveRaised();
   const pct = Math.min(100, (raised / GENESIS.hardCap) * 100);
   // Genesis Founder positions are capped and sold on a first-come basis — a hard
   // number (not a countdown) is what actually conveys "limited and won't repeat."
-  const unitsSold = GENESIS.foundersSold;
+  const unitsSold = useLiveFoundersSold();
   const unitsTotal = GENESIS.foundersTotal;
   const unitsPct = Math.min(100, (unitsSold / unitsTotal) * 100);
   const TierIcon = TIER_ICONS[tier?.name ?? "Starter"] ?? Star;
@@ -84,11 +92,46 @@ function GenesisPage() {
   /** No tier reached (below Starter's $50 minimum) → no neon at all, just a plain box. */
   const hasTier = tier !== null;
 
-  function submit() {
+  async function submit() {
     if (!address) return toast.error(t("genesis.toast.connect"));
-    buy(amount);
-    toast.success(`${t("genesis.toast.reserved.prefix")} ${pvp.toLocaleString()} PVP · ${tier?.name ?? "Starter"} ${t("genesis.toast.reserved.tier")}`);
+
+    if (!onChainReady) {
+      // Contrato ainda não configurado (ver genesisContract.ts) — mantém a reserva
+      // local/simulada de sempre.
+      await buy(amount);
+      toast.success(`${t("genesis.toast.reserved.prefix")} ${pvp.toLocaleString()} PVP · ${tier?.name ?? "Starter"} ${t("genesis.toast.reserved.tier")}`);
+      return;
+    }
+
+    if (wrongNetwork) return toast.error(t("genesis.toast.wrongNetwork"));
+
+    try {
+      await buy(amount, asset);
+      toast.success(t("genesis.toast.onchainSuccess"));
+    } catch (err) {
+      const code = err instanceof Error ? err.message : "";
+      if (code === BUY_ERROR.USER_REJECTED) toast.error(t("genesis.toast.rejected"));
+      else if (code === BUY_ERROR.BELOW_MIN_PURCHASE) toast.error(t("genesis.toast.belowMinPurchase"));
+      else if (code === BUY_ERROR.SALE_INACTIVE) toast.error(t("genesis.toast.saleInactive"));
+      else if (code === BUY_ERROR.ASSET_NOT_CONFIGURED) toast.error(t("genesis.toast.assetNotConfigured"));
+      else if (code === BUY_ERROR.WRONG_NETWORK) toast.error(t("genesis.toast.wrongNetwork"));
+      else if (code === BUY_ERROR.TX_FAILED) toast.error(t("genesis.toast.failed"));
+      else if (code === BUY_ERROR.NO_WALLET) toast.error(t("genesis.toast.connect"));
+      else if (code === BUY_ERROR.INSUFFICIENT_BALANCE) toast.error(t("genesis.toast.insufficientBalance"));
+      else {
+        console.error("[genesis] buy failed", err);
+        toast.error(t("genesis.toast.genericError"));
+      }
+    }
   }
+
+  const confirmLabel = buying
+    ? buyStep === "approving"
+      ? t("genesis.confirm.approving")
+      : buyStep === "confirming"
+        ? t("genesis.confirm.confirming")
+        : t("genesis.confirm.pending")
+    : t("genesis.confirm");
 
   return (
     <Layout>
@@ -234,6 +277,63 @@ function GenesisPage() {
                 </SliderPrimitive.Root>
               </div>
 
+              {onChainReady && availableAssets.length > 0 && (
+                <div className="mt-6">
+                  <label className="text-xs uppercase tracking-widest text-white/50">{t("genesis.asset.label")}</label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {availableAssets.map((a) => {
+                      const active = asset === a;
+                      return (
+                        <button
+                          key={a}
+                          onClick={() => setAsset(a)}
+                          disabled={buying}
+                          className={`rounded-xl border px-4 py-2 text-sm font-semibold transition disabled:opacity-50 ${
+                            active
+                              ? "border-[var(--neon-purple)] bg-[var(--neon-purple)]/15 text-white"
+                              : "border-white/10 bg-white/[0.03] text-white/60 hover:border-white/25 hover:bg-white/[0.06]"
+                          }`}
+                        >
+                          {ASSETS[a].label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {onChainReady && (
+                <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-xs text-white/60">
+                  <button
+                    type="button"
+                    onClick={() => setShowBridgeHelp((v) => !v)}
+                    className="flex w-full items-center justify-between gap-2 text-left"
+                  >
+                    <span className="flex items-center gap-2 font-medium text-white/70">
+                      <Info className="h-3.5 w-3.5 shrink-0 text-[var(--neon-blue)]" />
+                      {t("genesis.network.notice")}
+                    </span>
+                    <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition ${showBridgeHelp ? "rotate-180" : ""}`} />
+                  </button>
+                  {showBridgeHelp && (
+                    <div className="mt-3 space-y-2 border-t border-white/10 pt-3">
+                      <p>{t("genesis.network.help.coinbase")}</p>
+                      <p>
+                        {t("genesis.network.help.bridge")}{" "}
+                        <a
+                          href="https://superbridge.app/?fromChainId=1&toChainId=8453"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 font-medium text-[var(--neon-purple)] hover:underline"
+                        >
+                          Superbridge <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--neon-purple)]/25 bg-gradient-to-r from-[var(--neon-purple)]/15 via-white/[0.02] to-[var(--neon-blue)]/10 p-5">
                 <div>
                   <div className="text-xs uppercase tracking-widest text-white/50">{t("genesis.receive")}</div>
@@ -263,35 +363,53 @@ function GenesisPage() {
 
               <motion.button
                 onClick={submit}
-                className="btn-neon btn-neon-hover relative mt-6 w-full overflow-hidden"
+                disabled={buying}
+                className="btn-neon btn-neon-hover relative mt-6 w-full overflow-hidden disabled:cursor-not-allowed disabled:opacity-70"
                 // Kept on the fixed brand gradient regardless of the selected tier —
                 // the CTA's look should stay consistent, not repaint per tier color.
-                animate={{
-                  boxShadow: [
-                    "0 10px 30px -10px rgba(138,46,255,0.45), inset 0 1px 0 rgba(255,255,255,0.25)",
-                    "0 16px 44px -6px rgba(138,46,255,0.8), inset 0 1px 0 rgba(255,255,255,0.4)",
-                    "0 10px 30px -10px rgba(138,46,255,0.45), inset 0 1px 0 rgba(255,255,255,0.25)",
-                  ],
-                }}
+                animate={
+                  buying
+                    ? {}
+                    : {
+                        boxShadow: [
+                          "0 10px 30px -10px rgba(138,46,255,0.45), inset 0 1px 0 rgba(255,255,255,0.25)",
+                          "0 16px 44px -6px rgba(138,46,255,0.8), inset 0 1px 0 rgba(255,255,255,0.4)",
+                          "0 10px 30px -10px rgba(138,46,255,0.45), inset 0 1px 0 rgba(255,255,255,0.25)",
+                        ],
+                      }
+                }
                 transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
               >
                 {/* Diagonal light sweep — reinforces "click me". */}
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0"
-                  style={{
-                    background: "linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.4) 50%, transparent 65%)",
-                    animation: "pvp-cta-shine 3.2s ease-in-out infinite",
-                  }}
-                />
+                {!buying && (
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0"
+                    style={{
+                      background: "linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.4) 50%, transparent 65%)",
+                      animation: "pvp-cta-shine 3.2s ease-in-out infinite",
+                    }}
+                  />
+                )}
                 <span className="relative z-10 inline-flex items-center gap-2">
-                  <Check className="h-4 w-4" /> {t("genesis.confirm")}
+                  {buying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} {confirmLabel}
                 </span>
               </motion.button>
               {!address && (
                 <div className="mt-3 flex items-center justify-between rounded-2xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-3 text-sm text-yellow-200/80">
                   {t("genesis.connect.prompt")}
                   <WalletButton />
+                </div>
+              )}
+              {address && wrongNetwork && (
+                <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-3 text-sm text-yellow-200/80">
+                  {t("genesis.toast.wrongNetwork")}
+                  <button
+                    onClick={switchToBase}
+                    className="shrink-0 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-3 py-1.5 text-xs font-medium text-yellow-200 transition hover:bg-yellow-500/15"
+                  >
+                    {t("wallet.switch.base")}
+                  </button>
                 </div>
               )}
                 </div>
@@ -324,8 +442,8 @@ function GenesisPage() {
                   </motion.div>
                 </div>
                 <div className="mt-3 flex justify-between text-sm text-white/70">
-                  <span>${raised.toLocaleString()} {t("genesis.raised.suffix")}</span>
-                  <span>${GENESIS.hardCap.toLocaleString()} {t("genesis.cap.suffix")}</span>
+                  <span className="tabular-nums">${raised.toLocaleString()} {t("genesis.raised.suffix")}</span>
+                  <span className="tabular-nums">${GENESIS.hardCap.toLocaleString()} {t("genesis.cap.suffix")}</span>
                 </div>
               </motion.div>
               <div className="glass rounded-3xl p-6">
@@ -353,8 +471,8 @@ function GenesisPage() {
                   </motion.div>
                 </div>
                 <div className="mt-3 flex justify-between text-sm text-white/70">
-                  <span>{unitsSold.toLocaleString()} {t("genesis.unitsSold.soldSuffix")}</span>
-                  <span>{unitsTotal.toLocaleString()} {t("genesis.unitsSold.totalSuffix")}</span>
+                  <span className="tabular-nums">{unitsSold.toLocaleString()} {t("genesis.unitsSold.soldSuffix")}</span>
+                  <span className="tabular-nums">{unitsTotal.toLocaleString()} {t("genesis.unitsSold.totalSuffix")}</span>
                 </div>
                 <div className="mt-3 flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/5 px-3 py-2 text-xs text-red-200/80">
                   <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
@@ -444,6 +562,8 @@ function GenesisPage() {
               </div>
             </div>
           </div>
+
+          <LeadCapture variant="genesis" />
         </div>
       </section>
     </Layout>

@@ -1,9 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { GridBackground } from "@/components/Background";
-import { useWallet, tierFor, shortAddr } from "@/lib/wallet";
+import { useWallet, tierFor, shortAddr, ACTIVE_EXPLORER_URL } from "@/lib/wallet";
 import { WalletButton } from "@/components/WalletButton";
-import { Wallet, Trophy, Coins, Clock, Check, ExternalLink, Star, Shield, Award, Gem, type LucideIcon } from "lucide-react";
+import {
+  Wallet, Trophy, Coins, Clock, Check, ExternalLink, Star, Shield, Award, Gem, RefreshCw, type LucideIcon,
+} from "lucide-react";
+import { toast } from "sonner";
 import { useLang } from "@/lib/i18n";
 
 /** Same mapping used on the Genesis page — keeps the tier's icon consistent site-wide. */
@@ -29,8 +33,19 @@ export const Route = createFileRoute("/dashboard")({
 
 function Dashboard() {
   const { t } = useLang();
-  const { address, invested, reservedPvp, txs } = useWallet();
+  const { address, invested, reservedPvp, txs, onChainReady, refreshOnChainPosition } = useWallet();
   const tier = tierFor(invested);
+  const [syncing, setSyncing] = useState(false);
+
+  async function handleSync() {
+    setSyncing(true);
+    try {
+      await refreshOnChainPosition();
+      toast.success(t("dashboard.sync.success"));
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   if (!address) {
     return (
@@ -60,7 +75,18 @@ function Dashboard() {
               <div className="text-xs uppercase tracking-widest text-white/50">{t("dashboard.label")}</div>
               <h1 className="mt-1 text-3xl font-bold md:text-4xl">{t("dashboard.welcome")} <span className="text-gradient">{shortAddr(address)}</span></h1>
             </div>
-            <Link to="/genesis" className="btn-ghost btn-ghost-hover text-sm">{t("dashboard.reserve.more")}</Link>
+            <div className="flex items-center gap-3">
+              {onChainReady && (
+                <button
+                  onClick={handleSync}
+                  disabled={syncing}
+                  className="btn-ghost btn-ghost-hover flex items-center gap-1.5 text-sm disabled:opacity-60"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} /> {t("dashboard.sync.button")}
+                </button>
+              )}
+              <Link to="/genesis" className="btn-ghost btn-ghost-hover text-sm">{t("dashboard.reserve.more")}</Link>
+            </div>
           </div>
 
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
@@ -72,7 +98,12 @@ function Dashboard() {
               sub={tier ? `≥ $${tier.min}` : t("dashboard.stat.tier.unlock")}
               tierColor={tier?.color}
             />
-            <StatCard icon={Coins} label={t("dashboard.stat.reserved")} value={reservedPvp.toLocaleString()} sub={`$${invested.toLocaleString()} ${t("dashboard.stat.invested.suffix")}`} />
+            <StatCard
+              icon={Coins}
+              label={t("dashboard.stat.reserved")}
+              value={reservedPvp.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+              sub={`$${invested.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${t("dashboard.stat.invested.suffix")}`}
+            />
             <StatCard icon={Clock} label={t("dashboard.stat.status")} value={t("dashboard.stat.status.value")} sub={t("dashboard.stat.status.sub")} />
           </div>
 
@@ -101,13 +132,37 @@ function Dashboard() {
                     <tbody>
                       {txs.map((tx) => (
                         <tr key={tx.id} className="border-t border-white/5">
-                          <td className="py-3 font-mono text-xs text-white/70 flex items-center gap-1">{tx.id}<ExternalLink className="h-3 w-3 opacity-40" /></td>
-                          <td className="py-3">${tx.amount.toLocaleString()}</td>
-                          <td className="py-3">{tx.pvp.toLocaleString()}</td>
+                          <td className="py-3 font-mono text-xs text-white/70">
+                            {tx.hash ? (
+                              <a
+                                href={`${ACTIVE_EXPLORER_URL}/tx/${tx.hash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 hover:text-[var(--neon-blue)]"
+                                title={t("dashboard.tx.viewExplorer")}
+                              >
+                                {tx.id}<ExternalLink className="h-3 w-3 opacity-60" />
+                              </a>
+                            ) : (
+                              <span className="flex items-center gap-1">{tx.id}<ExternalLink className="h-3 w-3 opacity-40" /></span>
+                            )}
+                          </td>
+                          <td className="py-3">${tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td className="py-3">{tx.pvp.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
                           <td className="py-3 text-white/60">{new Date(tx.date).toLocaleString()}</td>
                           <td className="py-3">
-                            <span className="rounded-full bg-[var(--neon-purple)]/15 px-2 py-0.5 text-xs text-[var(--neon-purple)] ring-1 ring-[var(--neon-purple)]/30">
-                              {tx.status === "Confirmed" ? t("dashboard.tx.status.confirmed") : t("dashboard.tx.status.reserved")}
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs ring-1 ${
+                                tx.status === "Failed"
+                                  ? "bg-red-500/15 text-red-300 ring-red-500/30"
+                                  : "bg-[var(--neon-purple)]/15 text-[var(--neon-purple)] ring-[var(--neon-purple)]/30"
+                              }`}
+                            >
+                              {tx.status === "Confirmed"
+                                ? t("dashboard.tx.status.confirmed")
+                                : tx.status === "Failed"
+                                  ? t("dashboard.tx.status.failed")
+                                  : t("dashboard.tx.status.reserved")}
                             </span>
                           </td>
                         </tr>

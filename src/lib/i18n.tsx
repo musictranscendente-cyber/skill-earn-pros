@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { GENESIS } from "./wallet";
 
 export type Lang = "pt" | "en" | "es";
 
@@ -325,9 +326,19 @@ const STRINGS = {
   },
   "faq.q7": { pt: "Como eu conecto minha carteira?", en: "How do I connect my wallet?", es: "¿Cómo conecto mi cartera?" },
   "faq.a7": {
-    pt: "Use o botão Connect Wallet. MetaMask, Coinbase Wallet e WalletConnect são suportados.",
-    en: "Use the Connect Wallet button. MetaMask, Coinbase Wallet, and WalletConnect are supported.",
-    es: "Usa el botón Connect Wallet. MetaMask, Coinbase Wallet y WalletConnect son compatibles.",
+    pt: "Use o botão Connect Wallet — funciona com qualquer carteira de navegador compatível (ex: MetaMask, Coinbase Wallet). Suporte a WalletConnect (carteiras de celular) está a caminho.",
+    en: "Use the Connect Wallet button — works with any compatible browser wallet (e.g. MetaMask, Coinbase Wallet). WalletConnect support (mobile wallets) is on the way.",
+    es: "Usa el botón Connect Wallet — funciona con cualquier cartera de navegador compatible (ej: MetaMask, Coinbase Wallet). El soporte para WalletConnect (carteras móviles) está en camino.",
+  },
+  "faq.q8": {
+    pt: "Só dá pra pagar pela rede Base? E se minha cripto estiver em outra rede?",
+    en: "Can I only pay on the Base network? What if my crypto is on another network?",
+    es: "¿Solo puedo pagar en la red Base? ¿Y si mi cripto está en otra red?",
+  },
+  "faq.a8": {
+    pt: "Sim, a Venda Genesis aceita pagamento só na rede Base (mesma rede em que o PvP Pro é construído). Se sua cripto está em outra rede, dá pra trazer facilmente: se você tem conta na Coinbase, saque escolhendo Base como destino (direto, sem taxa de ponte); senão, use uma ponte oficial recomendada pela Base, como a Superbridge.",
+    en: "Yes, the Genesis Sale only accepts payment on the Base network (the same network PvP Pro is built on). If your crypto is on another network, it's easy to bring over: if you have a Coinbase account, withdraw choosing Base as the destination (direct, no bridge fee); otherwise, use an official bridge recommended by Base, such as Superbridge.",
+    es: "Sí, la Venta Genesis solo acepta pagos en la red Base (la misma red en la que está construido PvP Pro). Si tu cripto está en otra red, es fácil traerla: si tienes cuenta en Coinbase, retira eligiendo Base como destino (directo, sin comisión de puente); si no, usa un puente oficial recomendado por Base, como Superbridge.",
   },
 
   // Footer
@@ -357,7 +368,7 @@ const STRINGS = {
     es: "Una oportunidad limitada y exclusiva para entrar a PvP Pro antes de la expansión del ecosistema. Elige tu Tier y entra desde el inicio, recibiendo PVP, Founder NFT, participación en las tarifas destinadas a los Founders y beneficios exclusivos según el nivel elegido.",
   },
   "genesis.amount.label": { pt: "Valor do investimento", en: "Investment amount", es: "Monto de la inversión" },
-  "genesis.custom.label": { pt: "Valor personalizado (USDC)", en: "Custom amount (USDC)", es: "Monto personalizado (USDC)" },
+  "genesis.custom.label": { pt: "Valor personalizado (USD)", en: "Custom amount (USD)", es: "Monto personalizado (USD)" },
   "genesis.receive": { pt: "Você recebe", en: "You receive", es: "Recibes" },
   "genesis.price": { pt: "Preço", en: "Price", es: "Precio" },
   "genesis.tier": { pt: "Tier de founder", en: "Founder tier", es: "Tier de founder" },
@@ -381,6 +392,121 @@ const STRINGS = {
   "genesis.toast.connect": { pt: "Conecte sua carteira primeiro", en: "Connect your wallet first", es: "Conecta tu cartera primero" },
   "genesis.toast.reserved.prefix": { pt: "Reservado", en: "Reserved", es: "Reservado" },
   "genesis.toast.reserved.tier": { pt: "tier", en: "tier", es: "tier" },
+  "genesis.asset.label": { pt: "Pagar com", en: "Pay with", es: "Pagar con" },
+  "genesis.network.notice": {
+    pt: "Pagamentos são feitos na rede Base — não tem cripto lá ainda?",
+    en: "Payments are made on the Base network — don't have crypto there yet?",
+    es: "Los pagos se hacen en la red Base — ¿aún no tienes cripto allí?",
+  },
+  "genesis.network.help.coinbase": {
+    pt: "Tem conta na Coinbase? É o caminho mais rápido: ao sacar, escolha a rede Base como destino — cai direto na sua carteira, sem precisar de ponte.",
+    en: "Have a Coinbase account? That's the fastest path: when withdrawing, choose Base as the network — it lands straight in your wallet, no bridge needed.",
+    es: "¿Tienes cuenta en Coinbase? Es el camino más rápido: al retirar, elige la red Base como destino — llega directo a tu cartera, sin necesidad de puente.",
+  },
+  "genesis.network.help.bridge": {
+    pt: "Se sua cripto está em outra carteira ou rede (ex: Ethereum), use uma ponte oficial recomendada pela Base:",
+    en: "If your crypto is in another wallet or network (e.g. Ethereum), use an official bridge recommended by Base:",
+    es: "Si tu cripto está en otra cartera o red (ej: Ethereum), usa un puente oficial recomendado por Base:",
+  },
+  "leads.eyebrow": {
+    pt: "Fique por dentro",
+    en: "Stay in the loop",
+    es: "Mantente al tanto",
+  },
+  "leads.placeholder": {
+    pt: "seu@email.com",
+    en: "you@email.com",
+    es: "tu@email.com",
+  },
+  "leads.home.title": {
+    pt: "Garanta seu lugar antes que as vagas Founder acabem",
+    en: "Don't miss your shot at a Founder spot",
+    es: "Asegura tu lugar antes de que se acaben los cupos Founder",
+  },
+  "leads.home.desc": {
+    pt: "Deixe seu email e a gente avisa na hora certa — sem spam, sem compromisso, só o essencial pra você não ficar de fora da Genesis.",
+    en: "Drop your email and we'll reach out at the right moment — no spam, no commitment, just what you need to not miss the Genesis round.",
+    es: "Deja tu email y te avisamos en el momento justo — sin spam, sin compromiso, solo lo esencial para que no te quedes fuera de la Genesis.",
+  },
+  "leads.home.button": {
+    pt: "Quero ser avisado",
+    en: "Notify me",
+    es: "Quiero que me avisen",
+  },
+  "leads.home.success": {
+    pt: "Boa! Fique de olho no seu email — é lá que a novidade chega primeiro.",
+    en: "You're in! Keep an eye on your inbox — that's where the news lands first.",
+    es: "¡Listo! Atento a tu correo — ahí llega la novedad primero.",
+  },
+  "leads.genesis.title": {
+    pt: "Ainda pensando? A gente avisa quando a rodada estiver perto de fechar",
+    en: "Still deciding? We'll let you know when the round is close to closing",
+    es: "¿Aún lo estás pensando? Te avisamos cuando la ronda esté por cerrar",
+  },
+  "leads.genesis.desc": {
+    pt: "Sem pressão pra decidir agora — deixe seu email e você recebe um aviso só quando o hard cap estiver perto, pra não perder a janela.",
+    en: "No pressure to decide now — leave your email and you'll get a heads-up only when the hard cap is close, so you don't miss the window.",
+    es: "Sin presión para decidir ahora — deja tu email y recibirás un aviso solo cuando el hard cap esté cerca, para que no pierdas la ventana.",
+  },
+  "leads.genesis.button": {
+    pt: "Avisar quando estiver perto",
+    en: "Notify me when it's close",
+    es: "Avisarme cuando esté cerca",
+  },
+  "leads.genesis.success": {
+    pt: "Combinado! Você recebe um aviso assim que a rodada estiver perto de fechar.",
+    en: "Deal! You'll get a heads-up as soon as the round is close to closing.",
+    es: "¡Trato hecho! Recibirás un aviso en cuanto la ronda esté por cerrar.",
+  },
+  "leads.claim.title": {
+    pt: "Quer saber assim que a data do TGE for definida?",
+    en: "Want to know the moment the TGE date is set?",
+    es: "¿Quieres saber en cuanto se defina la fecha del TGE?",
+  },
+  "leads.claim.desc": {
+    pt: "O resgate do seu PVP abre no TGE (Token Generation Event) — deixe seu email e você é avisado no dia em que a data oficial sair.",
+    en: "Your PVP claim opens at the TGE (Token Generation Event) — leave your email and we'll notify you the day the official date is announced.",
+    es: "El rescate de tu PVP se abre en el TGE (Token Generation Event) — deja tu email y te avisamos el día en que se anuncie la fecha oficial.",
+  },
+  "leads.claim.button": {
+    pt: "Avisar sobre o TGE",
+    en: "Notify me about the TGE",
+    es: "Avisarme sobre el TGE",
+  },
+  "leads.claim.success": {
+    pt: "Prontinho! Você será avisado assim que a data do TGE for anunciada.",
+    en: "Done! You'll be notified as soon as the TGE date is announced.",
+    es: "¡Listo! Te avisaremos en cuanto se anuncie la fecha del TGE.",
+  },
+  "leads.error": {
+    pt: "Ops, não deu pra enviar agora. Tenta de novo em instantes.",
+    en: "Oops, couldn't send right now. Try again in a moment.",
+    es: "Ups, no se pudo enviar ahora. Intenta de nuevo en un momento.",
+  },
+  "genesis.testnet.notice": {
+    pt: "Genesis Sale ao vivo na Base. Valores reais — confirme sempre o que aparece na sua carteira antes de assinar.",
+    en: "Genesis Sale live on Base. Real funds — always confirm what your wallet shows before signing.",
+    es: "Genesis Sale en vivo en Base. Fondos reales — confirma siempre lo que muestra tu cartera antes de firmar.",
+  },
+  "genesis.toast.wrongNetwork": { pt: "Troque para a rede Base para continuar.", en: "Switch to the Base network to continue.", es: "Cambia a la red Base para continuar." },
+  "genesis.toast.saleInactive": { pt: "A campanha Genesis está pausada no contrato no momento.", en: "The Genesis campaign is currently paused on the contract.", es: "La campaña Genesis está pausada en el contrato en este momento." },
+  "genesis.toast.assetNotConfigured": { pt: "Esse ativo ainda não foi configurado no contrato.", en: "This asset hasn't been configured on the contract yet.", es: "Este activo aún no fue configurado en el contrato." },
+  "genesis.toast.priceError": { pt: "Não foi possível obter o preço do ativo no contrato. Confirme se ele já foi configurado.", en: "Couldn't get the asset's price from the contract. Check that it has been configured.", es: "No se pudo obtener el precio del activo en el contrato. Verifica que ya haya sido configurado." },
+  "genesis.toast.confirming": { pt: "Confirmando sua compra na blockchain…", en: "Confirming your purchase on the blockchain…", es: "Confirmando tu compra en la blockchain…" },
+  "genesis.toast.approving": { pt: "Aprovando o contrato para gastar seu token…", en: "Approving the contract to spend your token…", es: "Aprobando el contrato para gastar tu token…" },
+  "genesis.toast.onchainSuccess": { pt: "Compra confirmada na blockchain!", en: "Purchase confirmed on the blockchain!", es: "¡Compra confirmada en la blockchain!" },
+  "genesis.toast.rejected": { pt: "Transação cancelada na carteira.", en: "Transaction rejected in the wallet.", es: "Transacción cancelada en la cartera." },
+  "genesis.toast.failed": { pt: "A transação falhou na blockchain. Nenhum valor foi cobrado.", en: "The transaction failed on-chain. Nothing was charged.", es: "La transacción falló en la blockchain. No se cobró nada." },
+  "genesis.toast.genericError": { pt: "Não foi possível concluir a transação. Tente novamente.", en: "Couldn't complete the transaction. Please try again.", es: "No se pudo completar la transacción. Intenta de nuevo." },
+  "genesis.toast.insufficientBalance": { pt: "Saldo insuficiente nessa carteira para esse valor nesse ativo.", en: "Insufficient balance in this wallet for that amount in this asset.", es: "Saldo insuficiente en esta cartera para ese monto en este activo." },
+  "genesis.toast.belowMinPurchase": {
+    pt: `A compra mínima da Genesis Sale é de $${GENESIS.minPurchaseUsd}.`,
+    en: `The minimum Genesis Sale purchase is $${GENESIS.minPurchaseUsd}.`,
+    es: `La compra mínima del Genesis Sale es de $${GENESIS.minPurchaseUsd}.`,
+  },
+  "genesis.confirm.pending": { pt: "Processando…", en: "Processing…", es: "Procesando…" },
+  "genesis.confirm.approving": { pt: "Aprovando…", en: "Approving…", es: "Aprobando…" },
+  "genesis.confirm.confirming": { pt: "Confirmando…", en: "Confirming…", es: "Confirmando…" },
 
   // Dashboard page
   "dashboard.connect.title": { pt: "Conecte sua carteira", en: "Connect your wallet", es: "Conecta tu cartera" },
@@ -393,7 +519,7 @@ const STRINGS = {
   "dashboard.welcome": { pt: "Bem-vindo de volta,", en: "Welcome back,", es: "Bienvenido de nuevo," },
   "dashboard.reserve.more": { pt: "Reservar mais PVP", en: "Reserve more PVP", es: "Reservar más PVP" },
   "dashboard.stat.wallet": { pt: "Carteira", en: "Wallet", es: "Cartera" },
-  "dashboard.stat.wallet.sub": { pt: "Base Mainnet", en: "Base Mainnet", es: "Base Mainnet" },
+  "dashboard.stat.wallet.sub": { pt: "Base", en: "Base", es: "Base" },
   "dashboard.stat.tier": { pt: "Tier de founder", en: "Founder tier", es: "Tier de founder" },
   "dashboard.stat.tier.unlock": { pt: "Reserve para desbloquear", en: "Reserve to unlock", es: "Reserva para desbloquear" },
   "dashboard.stat.reserved": { pt: "PVP Reservado", en: "Reserved PVP", es: "PVP Reservado" },
@@ -413,6 +539,11 @@ const STRINGS = {
   "dashboard.tx.col.status": { pt: "Status", en: "Status", es: "Estado" },
   "dashboard.tx.status.reserved": { pt: "Reservado", en: "Reserved", es: "Reservado" },
   "dashboard.tx.status.confirmed": { pt: "Confirmado", en: "Confirmed", es: "Confirmado" },
+  "dashboard.tx.status.failed": { pt: "Falhou", en: "Failed", es: "Falló" },
+  "dashboard.tx.viewExplorer": { pt: "Ver no explorador", en: "View on explorer", es: "Ver en el explorador" },
+  "dashboard.sync.button": { pt: "Sincronizar com o contrato", en: "Sync with contract", es: "Sincronizar con el contrato" },
+  "dashboard.sync.success": { pt: "Posição atualizada a partir do contrato.", en: "Position updated from the contract.", es: "Posición actualizada desde el contrato." },
+  "dashboard.testnet.notice": { pt: "Dados vindos direto do contrato na Base.", en: "Data pulled directly from the contract on Base.", es: "Datos obtenidos directamente del contrato en Base." },
   "dashboard.claim.opens": { pt: "Portal de Resgate", en: "Claim Portal", es: "Portal de Reclamo" },
   "dashboard.claim.goto": { pt: "Ir para o portal de resgate", en: "Go to claim portal", es: "Ir al portal de reclamo" },
   "dashboard.perks.title": { pt: "Benefícios do tier", en: "Tier perks", es: "Beneficios del tier" },
@@ -440,13 +571,18 @@ const STRINGS = {
   // Wallet button / modal
   "wallet.connect": { pt: "Conectar Carteira", en: "Connect Wallet", es: "Conectar Cartera" },
   "wallet.modal.title": { pt: "Conecte uma carteira", en: "Connect a wallet", es: "Conecta una cartera" },
-  "wallet.modal.desc": { pt: "Conecte na Base Mainnet para acessar seu painel de founder.", en: "Connect on Base Mainnet to access your founder dashboard.", es: "Conéctate en Base Mainnet para acceder a tu panel de founder." },
+  "wallet.modal.desc": { pt: "Conecte na rede Base para participar da Genesis Sale.", en: "Connect on the Base network to take part in the Genesis Sale.", es: "Conéctate en la red Base para participar en la Genesis Sale." },
   "wallet.connecting": { pt: "Conectando…", en: "Connecting…", es: "Conectando…" },
   "wallet.detected": { pt: "Detectado", en: "Detected", es: "Detectada" },
+  "wallet.connect.timeout": {
+    pt: "A carteira não respondeu. Se você tem mais de uma extensão de carteira instalada (ex: MetaMask e Phantom), confira se não ficou um pop-up de escolha aberto, feche-o e tente conectar de novo.",
+    en: "The wallet didn't respond. If you have more than one wallet extension installed (e.g. MetaMask and Phantom), check for a leftover wallet-picker popup, close it, and try connecting again.",
+    es: "La cartera no respondió. Si tienes más de una extensión de cartera instalada (ej: MetaMask y Phantom), revisa si quedó abierto un popup de selección, ciérralo e intenta conectar de nuevo.",
+  },
   "wallet.demo.note": {
-    pt: "Conexão de carteira real. A compra da Genesis ainda roda em modo demonstração até o contrato auditado entrar no ar.",
-    en: "Real wallet connection. Genesis purchases still run in demo mode until the audited contract goes live.",
-    es: "Conexión de cartera real. La compra del Genesis todavía funciona en modo demostración hasta que el contrato auditado esté activo.",
+    pt: "Conexão de carteira real. As compras da Genesis Sale são reais e vão direto para o contrato na Base — confirme sempre os valores antes de assinar.",
+    en: "Real wallet connection. Genesis Sale purchases are real and go straight to the contract on Base — always confirm the values before signing.",
+    es: "Conexión de cartera real. Las compras del Genesis Sale son reales y van directo al contrato en Base — confirma siempre los valores antes de firmar.",
   },
   "wallet.disconnect": { pt: "Desconectar", en: "Disconnect", es: "Desconectar" },
   "wallet.browser.wallet": { pt: "Carteira do navegador", en: "Browser wallet", es: "Cartera del navegador" },

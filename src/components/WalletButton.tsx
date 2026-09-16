@@ -1,14 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wallet, X, Check, Copy, AlertTriangle, ExternalLink } from "lucide-react";
-import { useWallet, shortAddr } from "@/lib/wallet";
+import { useWallet, shortAddr, BUY_ERROR } from "@/lib/wallet";
 import { useLang } from "@/lib/i18n";
+import { toast } from "sonner";
 
 export function WalletButton() {
   const { address, connect, connecting, disconnect, hasProvider, wrongNetwork, switchToBase } = useWallet();
   const { t } = useLang();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  // 14/09/2026: o modal precisa ser "teleportado" pra fora do Navbar via portal — o
+  // <header> do site tem `backdrop-blur-xl` pro efeito de vidro dele, e um blur/filtro num
+  // elemento PAI faz o navegador tratar `position: fixed` de dentro dele como relativo a
+  // esse elemento, não à tela toda (regra do CSS, não é bug do layout em si). Resultado
+  // reportado pelo usuário: o fundo escurecido do modal ficava preso dentro do cabeçalho em
+  // vez de cobrir a página inteira, deixando o conteúdo por trás visível/"misturado".
+  // `mounted` evita chamar `document` durante o SSR (o servidor não tem DOM).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   if (address) {
     return (
@@ -48,14 +59,9 @@ export function WalletButton() {
     );
   }
 
-  return (
-    <>
-      <button onClick={() => setOpen(true)} className="btn-neon btn-neon-hover text-sm">
-        <Wallet className="h-4 w-4" />
-        {t("wallet.connect")}
-      </button>
-      <AnimatePresence>
-        {open && (
+  const modal = (
+    <AnimatePresence>
+      {open && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -83,8 +89,18 @@ export function WalletButton() {
                   <button
                     disabled={connecting}
                     onClick={async () => {
-                      await connect();
-                      setOpen(false);
+                      // 14/09/2026: `connect()` agora joga um erro específico (em vez de só
+                      // travar em "Conectando...") quando a carteira nunca responde — comum
+                      // com mais de uma extensão instalada (ex: MetaMask + Phantom) e o
+                      // seletor de carteira do navegador sendo fechado sem escolher nada.
+                      try {
+                        await connect();
+                        setOpen(false);
+                      } catch (err) {
+                        if (err instanceof Error && err.message === BUY_ERROR.WALLET_TIMEOUT) {
+                          toast.error(t("wallet.connect.timeout"));
+                        }
+                      }
                     }}
                     className="glass flex w-full items-center justify-between rounded-2xl p-4 transition hover:border-[color:var(--neon-purple)]/60 disabled:opacity-50"
                   >
@@ -122,8 +138,17 @@ export function WalletButton() {
               <p className="mt-5 text-center text-xs text-white/40">{t("wallet.demo.note")}</p>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
+      )}
+    </AnimatePresence>
+  );
+
+  return (
+    <>
+      <button onClick={() => setOpen(true)} className="btn-neon btn-neon-hover text-sm">
+        <Wallet className="h-4 w-4" />
+        {t("wallet.connect")}
+      </button>
+      {mounted && createPortal(modal, document.body)}
     </>
   );
 }

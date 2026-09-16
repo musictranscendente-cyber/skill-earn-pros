@@ -25,8 +25,18 @@ Abra a MetaMask → rede → "Adicionar rede" → "Adicionar rede manualmente" e
 ## 2. Pegar ETH de teste (grátis)
 
 Você precisa de um pouco de ETH de teste só pra pagar o "gás" (taxa) das transações — não vale
-nada de verdade. Pesquise por "Base Sepolia faucet" — tem opções como a da própria Coinbase
-Developer Platform e a da thirdweb. Cole o endereço da sua carteira lá e recebe em segundos.
+nada de verdade.
+
+⚠️ **Cuidado com a faucet da Alchemy** — se você pesquisar "Base Sepolia faucet" no Google, ela
+costuma aparecer em primeiro lugar, mas ela exige que sua carteira já tenha pelo menos 0,001 ETH
+na rede **principal** (mainnet) pra liberar o teste — não é uma regra da Base, é só uma trava
+daquela faucet específica pra evitar bots. Se você não tem ETH de verdade, ela não vai funcionar.
+
+Use em vez dela a da **QuickNode**, que não pede nada disso:
+
+**https://faucet.quicknode.com/base/sepolia** — cole o endereço da sua carteira, sem precisar de
+conta, sem postar no X, sem saldo nenhum em rede nenhuma. Dá 0,1 ETH de teste, uma vez a cada 24h.
+Isso é mais do que suficiente pros testes.
 
 ## 3. Pegar USDC de teste (grátis)
 
@@ -81,13 +91,24 @@ construtor:
 - `initialOwner`: o endereço da sua própria carteira MetaMask (copie da extensão)
 - `initialTreasury`: o mesmo endereço da sua carteira, por enquanto (é o "tesouro" — dá pra trocar
   depois com `setTreasury`, inclusive pra uma carteira multisig quando tiver uma)
-- `_priceUsd18`: `2000000000000000` (isso é $0.002 por PVP, no formato do contrato)
+- `_priceUsd18`: `100000000000000000` (isso é $0.10 por PVP, no formato do contrato — atualizado junto com o preço do site em 05/09/2026)
 - `_hardCapUsd18`: `10000000000000000000000000` (isso é $10.000.000, no formato do contrato)
 
 Confirme na MetaMask. Guarde o endereço do contrato que aparece depois do deploy — é esse
 endereço que vamos usar no site depois.
 
 ## 8. Configurar os ativos aceitos
+
+⚠️ **Confira os dois endereços de "Chainlink price feed" abaixo (ETH/USD e BTC/USD) antes de usar.**
+Eu revalidei o endereço do USDC de teste agora (está correto), mas não consegui abrir a tabela
+oficial da Chainlink pra revalidar esses dois — a página carrega os dados via JavaScript e minha
+ferramenta de busca não consegue ler. Antes do passo 8, entre em
+**https://docs.chain.link/data-feeds/price-feeds/addresses?network=base**, marque "Show testnet
+feeds", procure "Base Sepolia" e confirme que o endereço de ETH/USD e o de BTC/USD batem com os
+que estão aqui embaixo. Se não bater, me manda o endereço certo que eu corrijo o guia. Se estiver
+errado, o pior que acontece é a chamada `buyWithEth`/`buyWithToken` desses ativos falhar com erro
+na hora do teste (não trava dinheiro nem gera preço errado silenciosamente) — mas é melhor
+confirmar antes.
 
 Ainda na aba Deploy, abaixo do contrato já deployado (`PvPGenesisSale`), chame a função
 `configureAsset` quatro vezes, uma pra cada ativo:
@@ -144,6 +165,49 @@ Chame `setSaleActive` com `true`. A partir daqui o contrato aceita compras.
 Depois de comprar, chame `positionOf` passando seu próprio endereço — ele mostra quanto você já
 "investiu" em dólar e quanto PVP reservou. Dá pra ver tudo isso também direto no
 **https://sepolia.basescan.org**, colando o endereço do contrato.
+
+---
+
+## 11. Ligar o site de verdade a esse contrato
+
+Até aqui, tudo aconteceu só no Remix. Este passo final é o que faz o **próprio site**
+(botão "Confirmar reserva" da página Genesis) mandar uma transação de verdade pra Base Sepolia,
+em vez de só simular localmente como fazia antes.
+
+Abra o arquivo `src/lib/genesisContract.ts` (peça pra IA abrir/editar se preferir não mexer você
+mesmo) e preencha 3 endereços que você já tem guardados dos passos 6 e 7 acima:
+
+```ts
+export const GENESIS_CONTRACT_ADDRESS = ""; // <- endereço do PvPGenesisSale (passo 7)
+```
+```ts
+USDT: { label: "USDT (teste)", address: "", decimals: 6, isStable: true }, // <- MockERC20 "USDT" (passo 6)
+BTC: { label: "cbBTC (teste)", address: "", decimals: 8, isStable: false }, // <- MockERC20 "cbBTC" (passo 6)
+```
+
+Cole cada endereço entre as aspas vazias `""`. O endereço do USDC de teste já vem preenchido
+(é o oficial da Circle, o mesmo do passo 3) e não precisa mexer nele.
+
+**Importante:** enquanto `GENESIS_CONTRACT_ADDRESS` estiver vazio, o site continua se comportando
+exatamente como antes — reserva só local, sem transação nenhuma. Só depois de colar o endereço é
+que o botão passa a abrir a MetaMask de verdade. Ou seja, dá pra fazer esse passo com calma, sem
+pressa e sem risco de "quebrar" o site enquanto isso.
+
+Depois de salvar o arquivo com os 3 endereços preenchidos:
+
+1. No terminal (com `npm run dev` já rodando em outra aba, ou reiniciando ele), abra o site local
+   e vá na página **Genesis**.
+2. Conecte a MetaMask — ela vai pedir pra trocar pra rede **Base Sepolia** automaticamente (o site
+   já sabe que deve usar essa rede enquanto estiver em modo teste).
+3. Escolha um valor, escolha o ativo (ETH, USDC, ou os de teste USDT/cbBTC — só aparecem os que
+   você já configurou), e clique em "Confirmar reserva". A MetaMask vai abrir pedindo confirmação
+   de verdade — exatamente como fez no Remix, só que agora pela tela do site.
+4. Depois de confirmar, vá na página **Dashboard** — ela mostra sua posição real (lida direto do
+   contrato) e o histórico de transações, cada uma com um link pra ver no BaseScan.
+
+Se alguma coisa der errado (rede errada, ativo não configurado, campanha pausada), o site mostra
+um aviso explicando o que fazer — nenhuma etapa deixa o dinheiro de teste "preso" no meio do
+caminho.
 
 ---
 

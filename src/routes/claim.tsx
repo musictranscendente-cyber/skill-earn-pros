@@ -3,6 +3,7 @@ import { Layout } from "@/components/Layout";
 import { GridBackground } from "@/components/Background";
 import { useWallet } from "@/lib/wallet";
 import { WalletButton } from "@/components/WalletButton";
+import { LeadCapture } from "@/components/LeadCapture";
 import { Lock, Sparkles } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
@@ -36,7 +37,7 @@ function Claim() {
             <p className="mt-4 text-white/60">{t("claim.subtitle")}</p>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2">
-              <Box label={t("claim.reserved.label")} value={`${reservedPvp.toLocaleString()} PVP`} />
+              <Box label={t("claim.reserved.label")} value={`${reservedPvp.toLocaleString(undefined, { maximumFractionDigits: 2 })} PVP`} />
               <Box label={t("claim.status.label")} value={t("claim.status.value")} />
             </div>
 
@@ -48,6 +49,8 @@ function Claim() {
             </div>
             <p className="mt-3 text-xs text-white/40">{t("claim.note")}</p>
           </div>
+
+          <LeadCapture variant="claim" />
         </div>
       </section>
     </Layout>

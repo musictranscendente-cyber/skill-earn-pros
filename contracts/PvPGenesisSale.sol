@@ -8,7 +8,7 @@ import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /// @notice Minimal Chainlink price feed interface — declared locally so this file
-/// compiles in Remix without needing the full @chainlink/contracts package.
+/// compiles in Remix without needing the full chainlink contracts npm package.
 interface AggregatorV3Interface {
     function decimals() external view returns (uint8);
     function latestRoundData()
@@ -52,10 +52,25 @@ contract PvPGenesisSale is Ownable2Step, ReentrancyGuard {
     uint256 public priceUsd18;
     /// Hard cap for the round, in USD, 18-decimal fixed point.
     uint256 public hardCapUsd18;
-    /// Total raised so far, in USD, 18-decimal fixed point.
+    /// Total raised so far, in USD, 18-decimal fixed point. Only ever increased by
+    /// real payments (buyWithEth/buyWithToken) — this is the number the site shows
+    /// publicly as "amount raised", so it must never include free grants.
     uint256 public raisedUsd18;
+    /// USD-equivalent value of positions granted for free (e.g. influencer/marketing
+    /// partnerships — see `grantPosition`), kept OUT of `raisedUsd18` on purpose so
+    /// the public "amount raised" figure only ever reflects real money received.
+    /// Still checked against `hardCapUsd18` together with `raisedUsd18` so free
+    /// grants can't hand out more PVP than the round's allocation allows.
+    uint256 public grantedValueUsd18;
     /// Where collected funds go on withdraw. Intended to become a multisig (e.g. Safe) before mainnet.
     address public treasury;
+    /// Compra mínima aceita, em USD 18 casas fixas (ex: $5 == 5e18). Só vale pra
+    /// compras reais (buyWithEth/buyWithToken) — `grantPosition` (posições grátis
+    /// pra parcerias) nunca passa por essa checagem. 16/09/2026: adicionado porque
+    /// o contrato original não tinha piso nenhum — dava pra comprar $0,0001 e ainda
+    /// assim contar como "founder" na contagem pública, sem nenhum Tier de verdade
+    /// (o menor Tier, Starter, começa em $50).
+    uint256 public minPurchaseUsd18;
     /// Purchases are only accepted while true.
     bool public saleActive;
     /// A price feed answer older than this is rejected (stale-oracle protection).
@@ -67,11 +82,13 @@ contract PvPGenesisSale is Ownable2Step, ReentrancyGuard {
     event AssetConfigured(address indexed token, bool enabled, bool isStable, uint8 tokenDecimals, address priceFeed);
     event TreasuryUpdated(address indexed treasury);
     event ParamsUpdated(uint256 priceUsd18, uint256 hardCapUsd18);
+    event MinPurchaseUpdated(uint256 minPurchaseUsd18);
     event SaleStateChanged(bool active);
     event Purchased(
         address indexed buyer, address indexed asset, uint256 assetAmount, uint256 usdValue18, uint256 pvpReserved
     );
     event Withdrawn(address indexed token, uint256 amount, address indexed to);
+    event PositionGranted(address indexed wallet, uint256 usdValue18, uint256 pvp);
 
     error SaleNotActive();
     error AssetNotAccepted();
@@ -81,19 +98,25 @@ contract PvPGenesisSale is Ownable2Step, ReentrancyGuard {
     error InvalidPrice();
     error EditWhileActive();
     error ZeroAddress();
+    error BelowMinPurchase();
 
     modifier whenSaleActive() {
         if (!saleActive) revert SaleNotActive();
         _;
     }
 
-    constructor(address initialOwner, address initialTreasury, uint256 _priceUsd18, uint256 _hardCapUsd18)
-        Ownable(initialOwner)
-    {
+    constructor(
+        address initialOwner,
+        address initialTreasury,
+        uint256 _priceUsd18,
+        uint256 _hardCapUsd18,
+        uint256 _minPurchaseUsd18
+    ) Ownable(initialOwner) {
         if (initialTreasury == address(0)) revert ZeroAddress();
         treasury = initialTreasury;
         priceUsd18 = _priceUsd18;
         hardCapUsd18 = _hardCapUsd18;
+        minPurchaseUsd18 = _minPurchaseUsd18;
     }
 
     // ───────────────────────── Owner configuration ─────────────────────────
@@ -129,6 +152,12 @@ contract PvPGenesisSale is Ownable2Step, ReentrancyGuard {
         emit SaleStateChanged(active);
     }
 
+    function setMinPurchase(uint256 _minPurchaseUsd18) external onlyOwner {
+        if (saleActive) revert EditWhileActive();
+        minPurchaseUsd18 = _minPurchaseUsd18;
+        emit MinPurchaseUpdated(_minPurchaseUsd18);
+    }
+
     // ───────────────────────────── Purchases ────────────────────────────────
 
     function buyWithEth() external payable nonReentrant whenSaleActive {
@@ -148,9 +177,33 @@ contract PvPGenesisSale is Ownable2Step, ReentrancyGuard {
         _settle(msg.sender, token, amount, usdValue18);
     }
 
+    /// @notice Owner-only: credita `wallet` com uma posição Genesis SEM cobrar nada —
+    /// pensado pra parcerias de marketing/influenciadores (ex: dar um Tier a um
+    /// youtuber em troca de divulgação). NÃO soma em `raisedUsd18` (o número que o
+    /// site mostra publicamente como "arrecadado" continua refletindo só dinheiro
+    /// de verdade recebido) — mas ainda é somado a `hardCapUsd18` junto com
+    /// `raisedUsd18`, pra garantir que doações grátis não distribuam mais PVP do
+    /// que a rodada Genesis tem disponível.
+    /// @dev `usdValue18` é o valor em dólar, formato 18 casas fixas (ex: $500 =
+    /// 500000000000000000000). O PVP concedido é calculado com o mesmo `priceUsd18`
+    /// usado nas compras reais.
+    function grantPosition(address wallet, uint256 usdValue18) external onlyOwner {
+        if (wallet == address(0)) revert ZeroAddress();
+        if (usdValue18 == 0) revert ZeroAmount();
+        if (raisedUsd18 + grantedValueUsd18 + usdValue18 > hardCapUsd18) revert HardCapExceeded();
+        uint256 pvp = (usdValue18 * 1e18) / priceUsd18;
+        grantedValueUsd18 += usdValue18;
+        usdContributed18[wallet] += usdValue18;
+        pvpReserved[wallet] += pvp;
+        emit PositionGranted(wallet, usdValue18, pvp);
+    }
+
     function _settle(address buyer, address asset, uint256 assetAmount, uint256 usdValue18) internal {
         if (usdValue18 == 0) revert ZeroAmount();
-        if (raisedUsd18 + usdValue18 > hardCapUsd18) revert HardCapExceeded();
+        if (usdValue18 < minPurchaseUsd18) revert BelowMinPurchase();
+        // Soma junto com grantedValueUsd18 — compras reais e posições grátis dividem
+        // o mesmo teto (hardCapUsd18), pra nunca sair mais PVP do que a rodada tem.
+        if (raisedUsd18 + grantedValueUsd18 + usdValue18 > hardCapUsd18) revert HardCapExceeded();
         uint256 pvp = (usdValue18 * 1e18) / priceUsd18;
         raisedUsd18 += usdValue18;
         usdContributed18[buyer] += usdValue18;

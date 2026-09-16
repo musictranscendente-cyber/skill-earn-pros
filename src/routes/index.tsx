@@ -9,7 +9,8 @@ import {
 import { Layout } from "@/components/Layout";
 import { Section } from "@/components/Section";
 import { GridBackground } from "@/components/Background";
-import { TIERS, GENESIS } from "@/lib/wallet";
+import { TIERS, GENESIS, useLiveRaised, useLiveFoundersSold } from "@/lib/wallet";
+import { LeadCapture } from "@/components/LeadCapture";
 import { useLang } from "@/lib/i18n";
 import { useEffect, useRef, useState } from "react";
 import { FloatingGameIcons } from "@/components/home/FloatingGameIcons";
@@ -98,14 +99,17 @@ function Index() {
       <PanelBg>
         <FAQ />
       </PanelBg>
+      <SectionDivider />
+      <LeadSignup />
     </Layout>
   );
 }
 
 function Hero() {
   const { t } = useLang();
-  const raised = GENESIS.raised;
+  const raised = useLiveRaised();
   const pct = Math.min(100, (raised / GENESIS.hardCap) * 100);
+  const foundersSold = useLiveFoundersSold();
   const [videoReady, setVideoReady] = useState(false);
   return (
     <section className="relative isolate overflow-hidden pt-20 pb-14 md:pt-32 md:pb-20">
@@ -174,15 +178,29 @@ function Hero() {
           transition={{ delay: 0.3, duration: 0.7 }}
           className="glass neon-border mx-auto mt-16 max-w-5xl rounded-3xl p-6 md:p-8"
         >
-          <div className="flex flex-wrap gap-x-8 gap-y-6">
+          {/* 14/09/2026: usuário pediu explicitamente pra manter os 4 stats numa linha só
+              (nem 3+1, nem 2x2) — "quero tudo na mesma linha pode diminuir a fonte se
+              necessario". `flex-nowrap` garante que nunca quebra linha; as fontes dos
+              valores/legendas foram reduzidas (ver `Stat` abaixo) e os espaçamentos entre
+              caixas encolhidos pra tudo caber. `justify-between` espalha as 4 caixas por
+              toda a largura do card (a última encosta na borda direita, alinhada com a
+              barra de progresso logo abaixo) em vez de ficarem todas grudadas à esquerda
+              com um vão vazio sobrando do lado direito. */}
+          <div className="flex flex-nowrap items-start justify-between gap-x-3">
             <Stat label={t("hero.stat.price")} value={`$${GENESIS.price.toFixed(2)}`} sub={t("hero.stat.price.sub")} />
             <Stat label={t("hero.stat.cap")} value={`$${GENESIS.hardCap.toLocaleString()}`} sub={t("hero.stat.cap.sub")} />
-            <Stat label={t("hero.stat.raised")} value={`$${raised.toLocaleString()}`} sub={`${pct.toFixed(1)}% ${t("hero.stat.raised.suffix")}`} />
+            <Stat
+              label={t("hero.stat.raised")}
+              value={`$${raised.toLocaleString()}`}
+              sub={`${pct.toFixed(1)}% ${t("hero.stat.raised.suffix")}`}
+              minChars={`$${Math.round(GENESIS.raised).toLocaleString()}`.length + 2}
+            />
             <Stat
               highlight
               label={t("hero.stat.founders")}
-              value={`${GENESIS.foundersSold.toLocaleString()} / ${GENESIS.foundersTotal.toLocaleString()}`}
+              value={`${foundersSold.toLocaleString()} / ${GENESIS.foundersTotal.toLocaleString()}`}
               sub={t("hero.stat.founders.sub")}
+              minChars={`${GENESIS.foundersSold.toLocaleString()} / ${GENESIS.foundersTotal.toLocaleString()}`.length + 2}
             />
           </div>
           <div className="mt-6">
@@ -270,6 +288,7 @@ function Stat({
   value,
   sub,
   highlight = false,
+  minChars,
 }: {
   label: string;
   value: string;
@@ -277,39 +296,49 @@ function Stat({
   /** Marks the one stat that's genuinely urgent (limited Founder spots) so it visually
    *  pops out of the row instead of reading as just another neutral metric. */
   highlight?: boolean;
+  /** 14/09/2026: reserva uma largura mínima (em "ch", ~largura de um dígito) pro número.
+   *  Sem isso, um número que sobe de 0 até o valor real (efeito de contagem) muda de
+   *  quantidade de dígitos no meio da animação (ex: "0" → "6.512"), e a CAIXA em volta
+   *  redimensiona a cada frame pra acompanhar — é isso que parecia "a caixa tremendo".
+   *  IMPORTANTE: usar o tamanho do valor-base atual (+ uma folga pequena), NUNCA o
+   *  pior caso teórico (ex: hard cap inteiro) — isso já foi tentado e deixou a caixa
+   *  larga demais pro grid, quebrando a linha e sobrando um vão vazio horrível ao lado
+   *  dela. A folga só precisa cobrir o crescimento real esperado no curto prazo. */
+  minChars?: number;
 }) {
   if (highlight) {
+    // 14/09/2026: essa caixa tinha um box-shadow pulsando sem parar (parecia
+    // "respirar"/tremer) — removido a pedido do usuário: a animação deve ficar
+    // só no número (que já sobe suavemente via useLiveFoundersSold), não na caixa.
+    // Fontes/padding reduzidos (mesma data) pra caber as 4 caixas numa única linha,
+    // a pedido explícito do usuário — em vez de deixar a caixa "estourar" e forçar
+    // uma quebra de linha, ela agora ocupa menos espaço desde o início.
     return (
-      <motion.div
-        animate={{
-          boxShadow: [
-            "0 0 0px 0px rgba(138,46,255,0)",
-            "0 0 22px 1px rgba(138,46,255,0.35)",
-            "0 0 0px 0px rgba(138,46,255,0)",
-          ],
-        }}
-        transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
-        className="relative rounded-2xl border border-[var(--neon-purple)]/40 bg-[var(--neon-purple)]/[0.07] px-4 py-3"
-      >
-        <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-[var(--neon-purple)]">
-          <span className="relative flex h-1.5 w-1.5 shrink-0">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--neon-purple)] opacity-75" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--neon-purple)]" />
-          </span>
+      <div className="relative shrink-0 rounded-2xl border border-[var(--neon-purple)]/40 bg-[var(--neon-purple)]/[0.07] px-3 py-2 shadow-[0_0_16px_1px_rgba(138,46,255,0.25)]">
+        <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--neon-purple)] sm:text-xs sm:tracking-widest">
+          <span className="relative flex h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--neon-purple)]" />
           {label}
         </div>
-        <div className="mt-2 whitespace-nowrap text-2xl font-extrabold tracking-tight text-gradient drop-shadow-[0_0_20px_rgba(138,46,255,0.4)] md:text-3xl">
+        <div
+          className="mt-1.5 whitespace-nowrap text-base font-extrabold tabular-nums tracking-tight text-gradient drop-shadow-[0_0_20px_rgba(138,46,255,0.4)] sm:text-xl md:text-2xl"
+          style={minChars ? { minWidth: `${minChars}ch` } : undefined}
+        >
           {value}
         </div>
-        {sub && <div className="mt-1 whitespace-nowrap text-xs font-medium text-white/60">{sub}</div>}
-      </motion.div>
+        {sub && <div className="mt-1 text-[10px] font-medium text-white/60">{sub}</div>}
+      </div>
     );
   }
   return (
-    <div>
-      <div className="text-xs uppercase tracking-widest text-white/50">{label}</div>
-      <div className="text-silver mt-2 whitespace-nowrap text-2xl font-bold tracking-tight md:text-3xl">{value}</div>
-      {sub && <div className="mt-1 whitespace-nowrap text-xs text-white/45">{sub}</div>}
+    <div className="shrink-0">
+      <div className="text-[10px] uppercase tracking-wide text-white/50 sm:text-xs sm:tracking-widest">{label}</div>
+      <div
+        className="text-silver mt-1.5 whitespace-nowrap text-base font-bold tabular-nums tracking-tight sm:text-xl md:text-2xl"
+        style={minChars ? { minWidth: `${minChars}ch` } : undefined}
+      >
+        {value}
+      </div>
+      {sub && <div className="mt-1 whitespace-nowrap text-[10px] text-white/45 sm:text-xs">{sub}</div>}
     </div>
   );
 }
@@ -969,6 +998,7 @@ function FAQ() {
     { q: t("faq.q5"), a: t("faq.a5") },
     { q: t("faq.q6"), a: t("faq.a6") },
     { q: t("faq.q7"), a: t("faq.a7") },
+    { q: t("faq.q8"), a: t("faq.a8") },
   ];
   const [open, setOpen] = useState<number | null>(0);
   return (
@@ -993,6 +1023,20 @@ function FAQ() {
             </motion.div>
           </div>
         ))}
+      </div>
+    </Section>
+  );
+}
+
+// Fecha a página com uma chamada direta pra quem ainda não decidiu comprar — captura o
+// email (ver LeadCapture.tsx / src/lib/referral.ts) e, se a pessoa chegou por um link de
+// youtuber (?ref=...), já registra isso junto, sem ela precisar fazer nada a mais.
+function LeadSignup() {
+  const { t } = useLang();
+  return (
+    <Section id="leads" eyebrow={t("leads.eyebrow")}>
+      <div className="mx-auto max-w-xl">
+        <LeadCapture variant="home" />
       </div>
     </Section>
   );
