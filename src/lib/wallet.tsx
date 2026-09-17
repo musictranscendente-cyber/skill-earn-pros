@@ -9,6 +9,7 @@ import {
   approveAsset,
   buyWithEthOnChain,
   buyWithTokenOnChain,
+  GENESIS_CONTRACT_ADDRESS,
   genesisOnChainReady,
   getAllowance,
   getAssetBalance,
@@ -126,7 +127,16 @@ export type WalletState = {
 };
 
 const WalletCtx = createContext<WalletState | null>(null);
-const KEY = "pvp_wallet_v1";
+// 17/09/2026: a chave inclui o endereço do contrato atual — antes era fixa
+// ("pvp_wallet_v1"), então depois de um redeploy (contrato novo, endereço novo) o
+// navegador continuava "lembrando" pra sempre do histórico de transações do contrato
+// ANTIGO (bug real encontrado pelo usuário logo depois do redeploy de 17/09: o
+// Dashboard mostrava os 2 grants duplicados do contrato aposentado, mesmo com
+// Ctrl+Shift+R — que limpa cache de navegação, mas não localStorage). Com o endereço
+// dentro da chave, cada contrato tem seu próprio "balde" isolado: trocar de contrato
+// automaticamente começa do zero pra esse histórico local, em vez de arrastar dados de
+// um contrato que não existe mais pro site.
+const KEY = `pvp_wallet_v1_${GENESIS_CONTRACT_ADDRESS}`;
 
 function rand(): string {
   const chars = "0123456789abcdef";
