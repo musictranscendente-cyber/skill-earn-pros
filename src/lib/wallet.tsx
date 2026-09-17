@@ -104,7 +104,18 @@ export type WalletState = {
   reservedPvp: number;
   invested: number;
   txs: Tx[];
-  connect: () => Promise<void>;
+  /** `wallet` opcional: quando informado (clique numa carteira específica da lista de
+   *  `availableWallets` abaixo, detectada via EIP-6963), conecta com ELA — em vez de
+   *  deixar `getInjectedProvider()` chutar qual extensão usar. Sem argumento, mantém o
+   *  comportamento de sempre (só faz sentido quando existe 0 ou 1 carteira detectada). */
+  connect: (wallet?: EIP6963ProviderDetail) => Promise<void>;
+  /** 17/09/2026: lista de carteiras (extensões) detectadas via EIP-6963 — cada uma com
+   *  nome/ícone próprios. `WalletButton.tsx` usa isso pra mostrar uma opção clicável
+   *  por carteira quando há MAIS DE UMA instalada, em vez de um botão genérico único
+   *  (resolve o bug de abrir a carteira errada quando há mais de uma extensão). Fica
+   *  vazia (sem crash/erro) em qualquer navegador/carteira que ainda não suporte
+   *  EIP-6963 — nesse caso o fluxo antigo (`getInjectedProvider()`) continua valendo. */
+  availableWallets: EIP6963ProviderDetail[];
   /** 17/09/2026: conectar via WalletConnect (QR Code) — o caminho pra comprar pelo
    *  celular. Só faz algo se `walletConnectAvailable` for true (ver abaixo). */
   connectWalletConnect: () => Promise<void>;
@@ -195,6 +206,20 @@ declare global {
   }
 }
 
+/** 17/09/2026: EIP-6963 (Multi Injected Provider Discovery) — o padrão que resolve o
+ *  bug relatado pelo usuário: com MetaMask e Bybit Wallet instaladas juntas, clicar em
+ *  "Conectar Carteira" abriu a Bybit Wallet (que a pessoa nem tinha conta, só estava
+ *  instalando a extensão) em vez da MetaMask. Causa: `getInjectedProvider()` abaixo só
+ *  consegue "chutar" qual extensão usar quando há mais de uma (procura por
+ *  `isMetaMask: true` — mas outras carteiras também podem marcar essa flag, então o
+ *  chute pode sair errado silenciosamente). Com EIP-6963, cada extensão instalada "se
+ *  anuncia" (nome, ícone, provider próprio) respondendo a um evento do navegador — daí
+ *  dá pra listar todas e deixar a PESSOA escolher, em vez do site adivinhar. */
+export type EIP6963ProviderDetail = {
+  info: { uuid: string; name: string; icon: string; rdns: string };
+  provider: EIP1193Provider;
+};
+
 /** 14/09/2026: com MetaMask E Phantom instalados juntos, `window.ethereum` pode virar
  *  um objeto ambíguo que dispara um seletor de carteira do próprio navegador — se o
  *  usuário fechar esse seletor sem escolher nada, o `request(...)` que o site chamou
@@ -284,8 +309,15 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   // passa a chamar, pra funcionar com QUALQUER uma das duas formas de conectar.
   const wcProviderRef = useRef<WCProviderInstance | undefined>(undefined);
 
+  // 17/09/2026: carteiras detectadas via EIP-6963 (ver tipo/comentário acima) e qual
+  // delas foi escolhida explicitamente num clique em `connect(wallet)` — igual ao
+  // `wcProviderRef`, não é `useState` de propósito (só afeta QUAL provider outras
+  // funções conversam, não precisa re-renderizar nada por si só).
+  const [availableWallets, setAvailableWallets] = useState<EIP6963ProviderDetail[]>([]);
+  const selectedProviderRef = useRef<EIP1193Provider | undefined>(undefined);
+
   function getActiveProvider(): EIP1193Provider | undefined {
-    return wcProviderRef.current ?? getInjectedProvider();
+    return wcProviderRef.current ?? selectedProviderRef.current ?? getInjectedProvider();
   }
 
   // Genesis purchase history stays local/demo (see genesis.tsx) until GENESIS_CONTRACT_ADDRESS
@@ -307,6 +339,23 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     if (typeof window === "undefined") return;
     localStorage.setItem(KEY, JSON.stringify({ invested, reservedPvp, txs }));
   }, [invested, reservedPvp, txs]);
+
+  // 17/09/2026: descoberta EIP-6963 — cada extensão de carteira instalada "se anuncia"
+  // respondendo ao evento `eip6963:announceProvider` depois que o site dispara
+  // `eip6963:requestProvider`. Roda uma vez, ao montar; `availableWallets` some do
+  // contexto (`WalletState`) pra `WalletButton.tsx` decidir se mostra a lista de
+  // escolha ou o botão único de sempre. Não afeta em nada quem só tem uma carteira
+  // instalada (a lista simplesmente fica com 0 ou 1 item, tratado como antes).
+  useEffect(() => {
+    function onAnnounce(event: Event) {
+      const detail = (event as CustomEvent<EIP6963ProviderDetail>).detail;
+      if (!detail?.info?.uuid || !detail.provider) return;
+      setAvailableWallets((prev) => (prev.some((w) => w.info.uuid === detail.info.uuid) ? prev : [...prev, detail]));
+    }
+    window.addEventListener("eip6963:announceProvider", onAnnounce);
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+    return () => window.removeEventListener("eip6963:announceProvider", onAnnounce);
+  }, []);
 
   // Detect an injected wallet and silently pick up an already-authorized account
   // (eth_accounts never prompts — it just reports prior approvals), then keep
@@ -361,8 +410,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address]);
 
-  async function connect() {
-    const eth = getInjectedProvider();
+  /** 17/09/2026: `wallet` opcional — quando vem de um clique na lista do EIP-6963
+   *  (ver `availableWallets`/`WalletButton.tsx`), conecta com essa extensão
+   *  ESPECIFICAMENTE, guardando a escolha em `selectedProviderRef` pra `buy()`/
+   *  `switchToBase()`/`getActiveProvider()` conversarem com a mesma dali em diante —
+   *  em vez de cair de volta no chute ambíguo do `getInjectedProvider()`. */
+  async function connect(wallet?: EIP6963ProviderDetail) {
+    const eth = wallet?.provider ?? getInjectedProvider();
     if (!eth) {
       setHasProvider(false);
       return;
@@ -395,6 +449,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       setAddress(accounts[0] ?? null);
       const hex = (await eth.request({ method: "eth_chainId" })) as string;
       setChainId(parseInt(hex, 16));
+      // Guarda a instância que realmente conectou (a escolhida na lista, ou a única
+      // detectada) — daqui em diante `getActiveProvider()` fala sempre com ELA.
+      selectedProviderRef.current = eth;
     } catch (err) {
       console.error("[wallet] connect failed", err);
       // Repassa pro chamador (WalletButton) exatamente como `buy()` já faz com os
@@ -479,6 +536,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
     // Injected wallets have no real "disconnect" RPC — this only clears local UI state.
     // The wallet extension itself stays authorized until the user revokes it there.
+    selectedProviderRef.current = undefined;
     setAddress(null);
   }
 
@@ -643,6 +701,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         invested,
         txs,
         connect,
+        availableWallets,
         connectWalletConnect,
         walletConnectAvailable: WALLETCONNECT_AVAILABLE,
         disconnect,

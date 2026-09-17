@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wallet, X, Check, Copy, AlertTriangle, ExternalLink } from "lucide-react";
-import { useWallet, shortAddr, BUY_ERROR } from "@/lib/wallet";
+import { useWallet, shortAddr, BUY_ERROR, type EIP6963ProviderDetail } from "@/lib/wallet";
 import { useLang } from "@/lib/i18n";
 import { toast } from "sonner";
 
@@ -10,6 +10,7 @@ export function WalletButton() {
   const {
     address,
     connect,
+    availableWallets,
     connectWalletConnect,
     walletConnectAvailable,
     connecting,
@@ -30,6 +31,22 @@ export function WalletButton() {
   // `mounted` evita chamar `document` durante o SSR (o servidor não tem DOM).
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  // 17/09/2026: usado tanto pelo botão único (carteira detectada por
+  // `getInjectedProvider()`, sem ambiguidade) quanto por cada item da lista de
+  // `availableWallets` (EIP-6963) quando há mais de uma extensão instalada — `wallet`
+  // ausente = comportamento de sempre, `wallet` presente = conecta com ESSA extensão
+  // específica (ver comentário em `connect()` em wallet.tsx).
+  async function handleConnect(wallet?: EIP6963ProviderDetail) {
+    try {
+      await connect(wallet);
+      setOpen(false);
+    } catch (err) {
+      if (err instanceof Error && err.message === BUY_ERROR.WALLET_TIMEOUT) {
+        toast.error(t("wallet.connect.timeout"));
+      }
+    }
+  }
 
   if (address) {
     return (
@@ -96,22 +113,38 @@ export function WalletButton() {
 
               <div className="space-y-2">
                 {hasProvider ? (
+                  availableWallets.length > 1 ? (
+                    // 17/09/2026: mais de uma extensão detectada via EIP-6963 (ex: MetaMask +
+                    // Bybit Wallet) — mostra uma opção clicável PRA CADA UMA (nome + ícone
+                    // próprios), em vez do botão genérico único de antes, que deixava o site
+                    // "chutar" qual usar e podia abrir a errada (bug relatado pelo usuário:
+                    // clicou em conectar e abriu a Bybit Wallet, que ele nem tinha conta).
+                    <div className="space-y-2">
+                      {availableWallets.map((wallet) => (
+                        <button
+                          key={wallet.info.uuid}
+                          disabled={connecting}
+                          onClick={() => handleConnect(wallet)}
+                          className="glass flex w-full items-center justify-between rounded-2xl p-4 transition hover:border-[color:var(--neon-purple)]/60 disabled:opacity-50"
+                        >
+                          <span className="flex items-center gap-3">
+                            {wallet.info.icon ? (
+                              <img src={wallet.info.icon} alt="" className="h-6 w-6 rounded-md" />
+                            ) : (
+                              <span className="text-2xl">🦊</span>
+                            )}
+                            <span className="font-medium">{wallet.info.name}</span>
+                          </span>
+                          <span className="text-xs text-white/40">
+                            {connecting ? t("wallet.connecting") : t("wallet.detected")}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
                   <button
                     disabled={connecting}
-                    onClick={async () => {
-                      // 14/09/2026: `connect()` agora joga um erro específico (em vez de só
-                      // travar em "Conectando...") quando a carteira nunca responde — comum
-                      // com mais de uma extensão instalada (ex: MetaMask + Phantom) e o
-                      // seletor de carteira do navegador sendo fechado sem escolher nada.
-                      try {
-                        await connect();
-                        setOpen(false);
-                      } catch (err) {
-                        if (err instanceof Error && err.message === BUY_ERROR.WALLET_TIMEOUT) {
-                          toast.error(t("wallet.connect.timeout"));
-                        }
-                      }
-                    }}
+                    onClick={() => handleConnect(availableWallets[0])}
                     className="glass flex w-full items-center justify-between rounded-2xl p-4 transition hover:border-[color:var(--neon-purple)]/60 disabled:opacity-50"
                   >
                     <span className="flex items-center gap-3">
@@ -122,6 +155,7 @@ export function WalletButton() {
                       {connecting ? t("wallet.connecting") : t("wallet.detected")}
                     </span>
                   </button>
+                  )
                 ) : (
                   <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/60">
                     <p>{t("wallet.notfound.desc")}</p>
