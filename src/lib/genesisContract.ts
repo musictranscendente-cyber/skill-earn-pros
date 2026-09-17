@@ -59,7 +59,10 @@ const GENESIS_CONTRACT_ADDRESS_TESTNET = "0x6B807B0130E6C42FDb5739580c5408D4A816
  * preenchido com antecedência pra ficar pronto pra quando você decidir trocar o modo.
  * ────────────────────────────────────────────────────────────────────────────────
  */
-const GENESIS_CONTRACT_ADDRESS_MAINNET = "0x8cE0564EA679d7ab462347ba2C8566AA50ac4F29";
+// 17/09/2026: redeploy — contrato novo com o mínimo de compra de $5 (minPurchaseUsd18)
+// embutido desde o construtor. O endereço antigo (0x8cE0564EA679d7ab462347ba2C8566AA50ac4F29)
+// não tinha esse campo; foi esvaziado (withdraw) e aposentado, fica só no histórico.
+const GENESIS_CONTRACT_ADDRESS_MAINNET = "0x67a4B53893B030C98CFd90f50f5F4E575cb45f4F";
 
 export const GENESIS_CONTRACT_ADDRESS = TESTNET_MODE ? GENESIS_CONTRACT_ADDRESS_TESTNET : GENESIS_CONTRACT_ADDRESS_MAINNET;
 

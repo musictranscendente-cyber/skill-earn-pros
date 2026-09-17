@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useMotionValue, useSpring } from "framer-motion";
 import {
   ASSETS,
@@ -104,6 +104,12 @@ export type WalletState = {
   invested: number;
   txs: Tx[];
   connect: () => Promise<void>;
+  /** 17/09/2026: conectar via WalletConnect (QR Code) — o caminho pra comprar pelo
+   *  celular. Só faz algo se `walletConnectAvailable` for true (ver abaixo). */
+  connectWalletConnect: () => Promise<void>;
+  /** True quando WALLETCONNECT_PROJECT_ID (acima) já foi preenchido — controla se o
+   *  botão "WalletConnect" no modal aparece clicável ou como "Em breve" (cinza). */
+  walletConnectAvailable: boolean;
   disconnect: () => void;
   switchToBase: () => Promise<void>;
   /** True once GENESIS_CONTRACT_ADDRESS (genesisContract.ts) foi preenchido — a partir
@@ -147,6 +153,20 @@ const BASE_CHAIN_PARAMS = {
 const ACTIVE_CHAIN_ID = TESTNET_MODE ? BASE_SEPOLIA_CHAIN_ID : BASE_CHAIN_ID;
 const ACTIVE_CHAIN_PARAMS = TESTNET_MODE ? BASE_SEPOLIA_CHAIN_PARAMS : BASE_CHAIN_PARAMS;
 
+/** 17/09/2026: WalletConnect — é o que permite comprar pelo CELULAR. Uma extensão de
+ *  navegador (MetaMask/Coinbase Wallet) só existe em navegador de computador; no
+ *  celular, o WalletConnect mostra um QR Code (ou abre a carteira direto, se estiver no
+ *  navegador de dentro do próprio app da carteira) pra aprovar a conexão e cada
+ *  transação pelo app da carteira instalada no telefone.
+ *  Pra ativar, o dono do projeto precisa criar uma conta grátis em
+ *  https://cloud.reown.com (WalletConnect virou "Reown"), criar um Project novo, e
+ *  colar aqui o "Project ID" que aparece no painel. Mesma convenção do
+ *  GENESIS_CONTRACT_ADDRESS_MAINNET/FORM_ENDPOINT: enquanto estiver vazio, o botão
+ *  "WalletConnect" continua aparecendo cinza/"Em breve" no modal de conectar carteira,
+ *  sem afetar em nada quem já usa MetaMask no computador. */
+const WALLETCONNECT_PROJECT_ID = "21d7f3adc298b238eb2d4f6b6a385093";
+export const WALLETCONNECT_AVAILABLE = WALLETCONNECT_PROJECT_ID.length > 0;
+
 /** Minimal EIP-1193 shape — the interface every injected wallet (MetaMask, Coinbase Wallet, Brave, …) implements. */
 type EIP1193Provider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
@@ -186,6 +206,37 @@ function getInjectedProvider(): EIP1193Provider | undefined {
   return eth;
 }
 
+/** 17/09/2026: formato mínimo que a instância devolvida por `EthereumProvider.init(...)`
+ *  do pacote `@walletconnect/ethereum-provider` precisa ter pra gente usar — ela já
+ *  implementa `request`/`on`/`removeListener` iguaizinho a uma carteira injetada
+ *  (`EIP1193Provider` acima), só que com dois métodos a mais: `connect()` (abre o QR
+ *  Code e espera a aprovação pelo app da carteira) e `disconnect()` (encerra a sessão
+ *  de verdade — ao contrário de uma extensão injetada, aqui dá pra desconectar sem
+ *  precisar mexer em nenhuma configuração da carteira). Escrito à mão (em vez de
+ *  importar o tipo oficial do pacote) porque o pacote só existe depois que o usuário
+ *  rodar `npm install`, então isso evita quebrar o `tsc` antes disso acontecer. */
+type WCProviderInstance = EIP1193Provider & {
+  connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
+  accounts?: string[];
+  chainId?: number;
+};
+
+/** Import "preguiçoso" do pacote — só baixa o código dele quando alguém realmente
+ *  clica em "WalletConnect" (em vez de inflar o carregamento inicial do site pra quem
+ *  só usa MetaMask). Lançar `require`/`import` estático aqui quebraria o build antes do
+ *  `npm install`; import dinâmico só falha em tempo de execução, na hora do clique. */
+async function loadWalletConnectProvider(): Promise<{
+  init: (opts: Record<string, unknown>) => Promise<WCProviderInstance>;
+}> {
+  // @ts-ignore — módulo só existe depois de `npm install @walletconnect/ethereum-provider`;
+  // usa "ignore" (não "expect-error") de propósito, porque depois do install o TypeScript
+  // passa a achar o módulo normalmente e um "expect-error" sem erro nenhum pra suprimir
+  // quebraria o build sozinho ("Unused '@ts-expect-error' directive").
+  const mod = await import("@walletconnect/ethereum-provider");
+  return mod.EthereumProvider as { init: (opts: Record<string, unknown>) => Promise<WCProviderInstance> };
+}
+
 /** Nunca deixa uma chamada de carteira travar a UI pra sempre — se `promise` não
  *  resolver nem rejeitar dentro de `ms`, rejeita com `timeoutError` (o app trata isso
  *  como qualquer outro erro de conexão, sem precisar de F5 pra se recuperar). */
@@ -215,6 +266,17 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [txs, setTxs] = useState<Tx[]>([]);
   const [buying, setBuying] = useState(false);
   const [buyStep, setBuyStep] = useState<"approving" | "confirming" | null>(null);
+
+  // 17/09/2026: guarda a instância do WalletConnect enquanto ela estiver ativa (não é
+  // `useState` de propósito — trocar não precisa re-renderizar nada por si só, quem
+  // muda é o `address`/`chainId` que ela reporta). `getActiveProvider()` logo abaixo é
+  // o que toda função que já usava `getInjectedProvider()` direto (buy, switchToBase)
+  // passa a chamar, pra funcionar com QUALQUER uma das duas formas de conectar.
+  const wcProviderRef = useRef<WCProviderInstance | undefined>(undefined);
+
+  function getActiveProvider(): EIP1193Provider | undefined {
+    return wcProviderRef.current ?? getInjectedProvider();
+  }
 
   // Genesis purchase history stays local/demo (see genesis.tsx) until GENESIS_CONTRACT_ADDRESS
   // (genesisContract.ts) is filled in — from then on, invested/reservedPvp get overwritten by
@@ -334,14 +396,84 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  /** 17/09/2026: conectar via WalletConnect — o caminho que funciona no CELULAR (uma
+   *  extensão de navegador tipo MetaMask só existe em computador). Abre um QR Code (ou,
+   *  se o site já estiver sendo acessado de dentro do navegador embutido de um app de
+   *  carteira no celular, pode até pular direto pra aprovação); depois de aprovado,
+   *  passa a se comportar como qualquer outra carteira conectada — `buy()` e
+   *  `switchToBase()` usam `getActiveProvider()`, que passa a devolver esta em vez da
+   *  injetada. Só funciona depois que `WALLETCONNECT_PROJECT_ID` acima for preenchido
+   *  (o dono do projeto precisa criar uma conta grátis em https://cloud.reown.com) e o
+   *  pacote `@walletconnect/ethereum-provider` estiver instalado (`npm install`). */
+  async function connectWalletConnect() {
+    if (!WALLETCONNECT_AVAILABLE) return;
+    setConnecting(true);
+    try {
+      const EthereumProvider = await loadWalletConnectProvider();
+      const provider = await EthereumProvider.init({
+        projectId: WALLETCONNECT_PROJECT_ID,
+        chains: [ACTIVE_CHAIN_ID],
+        optionalChains: [ACTIVE_CHAIN_ID],
+        showQrModal: true,
+        metadata: {
+          name: "PvP Pro",
+          description: "PvP Pro — Genesis Founder Program",
+          url: "https://pvppro.app",
+          icons: ["https://pvppro.app/favicon.svg"],
+        },
+      });
+
+      const onAccountsChanged = (...args: unknown[]) => {
+        const accounts = args[0] as string[];
+        setAddress(accounts[0] ?? null);
+      };
+      const onChainChanged = (...args: unknown[]) => {
+        setChainId(Number(args[0]));
+      };
+      const onDisconnect = () => {
+        wcProviderRef.current = undefined;
+        setAddress(null);
+      };
+      provider.on?.("accountsChanged", onAccountsChanged);
+      provider.on?.("chainChanged", onChainChanged);
+      provider.on?.("disconnect", onDisconnect);
+
+      // Só marca como "ativa" DEPOIS de registrar os listeners acima, mas ANTES do
+      // `.connect()` — o QR Code já usa `getActiveProvider()` indiretamente por trás
+      // (ex: se o usuário girar a tela e o componente re-renderizar no meio do caminho).
+      wcProviderRef.current = provider;
+
+      await provider.connect(); // abre o QR Code / deep link e espera a aprovação
+
+      const accounts = (provider.accounts ?? ((await provider.request({ method: "eth_accounts" })) as string[])) ?? [];
+      setAddress(accounts[0] ?? null);
+      const rawChainId = provider.chainId ?? (await provider.request({ method: "eth_chainId" }));
+      setChainId(typeof rawChainId === "string" ? parseInt(rawChainId, 16) : Number(rawChainId));
+    } catch (err) {
+      console.error("[wallet] walletconnect connect failed", err);
+      wcProviderRef.current = undefined;
+      if (err instanceof Error) throw err;
+    } finally {
+      setConnecting(false);
+    }
+  }
+
   function disconnect() {
+    // 17/09/2026: WalletConnect tem uma sessão de verdade que dá pra encerrar (ao
+    // contrário de uma extensão injetada, que não tem "desconectar" de verdade — ver
+    // comentário original abaixo). Se a conexão ativa for por WalletConnect, encerra a
+    // sessão pra valer antes de limpar o estado local.
+    if (wcProviderRef.current) {
+      wcProviderRef.current.disconnect().catch(() => {});
+      wcProviderRef.current = undefined;
+    }
     // Injected wallets have no real "disconnect" RPC — this only clears local UI state.
     // The wallet extension itself stays authorized until the user revokes it there.
     setAddress(null);
   }
 
   async function switchToBase() {
-    const eth = getInjectedProvider();
+    const eth = getActiveProvider();
     if (!eth) return;
     try {
       await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: ACTIVE_CHAIN_PARAMS.chainId }] });
@@ -412,7 +544,10 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     // gás, e só depois descobriria pelo revert que o valor era baixo demais.
     if (amountUsd < GENESIS.minPurchaseUsd) throw new Error(BUY_ERROR.BELOW_MIN_PURCHASE);
 
-    const eth = getInjectedProvider();
+    // 17/09/2026: getActiveProvider() (não getInjectedProvider() direto) — pra comprar
+    // funcionar também com uma carteira conectada via WalletConnect (celular), não só
+    // extensão de navegador.
+    const eth = getActiveProvider();
     if (!eth || !address) throw new Error(BUY_ERROR.NO_WALLET);
     if (chainId !== ACTIVE_CHAIN_ID) throw new Error(BUY_ERROR.WRONG_NETWORK);
     if (buying) return;
@@ -498,6 +633,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         invested,
         txs,
         connect,
+        connectWalletConnect,
+        walletConnectAvailable: WALLETCONNECT_AVAILABLE,
         disconnect,
         switchToBase,
         onChainReady: genesisOnChainReady(),
@@ -528,7 +665,12 @@ export const GENESIS = {
    *  PvPGenesisSale.sol) — mudar aqui sozinho NÃO muda o mínimo de verdade, os
    *  dois precisam ficar em sincronia manualmente (o mínimo real é sempre o do
    *  contrato; isso aqui só evita que a pessoa pague gás numa compra fadada a
-   *  ser recusada). */
+   *  ser recusada).
+   *  17/09/2026: voltado de $1 (baixado só pra testar a compra pelo celular via
+   *  WalletConnect, confirmado funcionando) pra $5 de novo. Falta agora o
+   *  redeploy do contrato pra esse mínimo passar a valer de verdade on-chain
+   *  também (até lá, o contrato aceita qualquer valor — esse número aqui só
+   *  evita pagar gás à toa numa compra que, quando o redeploy sair, seria recusada). */
   minPurchaseUsd: 5,
   hardCap: 10_000_000,
   genesisAllocation: 100_000_000,

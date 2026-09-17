@@ -7,7 +7,17 @@ import { useLang } from "@/lib/i18n";
 import { toast } from "sonner";
 
 export function WalletButton() {
-  const { address, connect, connecting, disconnect, hasProvider, wrongNetwork, switchToBase } = useWallet();
+  const {
+    address,
+    connect,
+    connectWalletConnect,
+    walletConnectAvailable,
+    connecting,
+    disconnect,
+    hasProvider,
+    wrongNetwork,
+    switchToBase,
+  } = useWallet();
   const { t } = useLang();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -126,13 +136,42 @@ export function WalletButton() {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.02] p-4 text-sm text-white/30">
-                  <span className="flex items-center gap-3">
-                    <span className="text-2xl grayscale">🔗</span>
-                    <span className="font-medium">WalletConnect</span>
-                  </span>
-                  <span className="text-xs">{t("wallet.comingsoon")}</span>
-                </div>
+                {walletConnectAvailable ? (
+                  // 17/09/2026: WalletConnect ligado — o caminho que funciona pra comprar
+                  // pelo celular (QR Code / abre a carteira do telefone direto). Mesmo
+                  // visual/comportamento do botão da MetaMask acima, só que chamando
+                  // `connectWalletConnect()` em vez de `connect()`.
+                  <button
+                    disabled={connecting}
+                    onClick={async () => {
+                      try {
+                        await connectWalletConnect();
+                        setOpen(false);
+                      } catch (err) {
+                        if (err instanceof Error && err.message === BUY_ERROR.WALLET_TIMEOUT) {
+                          toast.error(t("wallet.connect.timeout"));
+                        }
+                      }
+                    }}
+                    className="glass flex w-full items-center justify-between rounded-2xl p-4 transition hover:border-[color:var(--neon-purple)]/60 disabled:opacity-50"
+                  >
+                    <span className="flex items-center gap-3">
+                      <span className="text-2xl">🔗</span>
+                      <span className="font-medium">WalletConnect</span>
+                    </span>
+                    <span className="text-xs text-white/40">
+                      {connecting ? t("wallet.connecting") : t("wallet.walletconnect.hint")}
+                    </span>
+                  </button>
+                ) : (
+                  <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.02] p-4 text-sm text-white/30">
+                    <span className="flex items-center gap-3">
+                      <span className="text-2xl grayscale">🔗</span>
+                      <span className="font-medium">WalletConnect</span>
+                    </span>
+                    <span className="text-xs">{t("wallet.comingsoon")}</span>
+                  </div>
+                )}
               </div>
 
               <p className="mt-5 text-center text-xs text-white/40">{t("wallet.demo.note")}</p>

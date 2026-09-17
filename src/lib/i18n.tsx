@@ -593,6 +593,10 @@ const STRINGS = {
   },
   "wallet.notfound.cta": { pt: "Instalar MetaMask", en: "Install MetaMask", es: "Instalar MetaMask" },
   "wallet.comingsoon": { pt: "Em breve", en: "Coming soon", es: "Próximamente" },
+  // 17/09/2026: texto que aparece embaixo do botão "WalletConnect" no modal — mesma ideia
+  // do "Detectado" do botão da MetaMask, mas explicando que vai abrir um QR Code (é assim
+  // que dá pra comprar pelo celular, escaneando com a carteira do celular, ex: MetaMask Mobile).
+  "wallet.walletconnect.hint": { pt: "Escanear QR Code", en: "Scan QR Code", es: "Escanear código QR" },
   "wallet.switch.base": { pt: "Trocar para Base", en: "Switch to Base", es: "Cambiar a Base" },
 
   // Play / Lig-4 demo page
