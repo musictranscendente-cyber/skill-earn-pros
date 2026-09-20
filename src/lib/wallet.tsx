@@ -241,6 +241,34 @@ function getInjectedProvider(): EIP1193Provider | undefined {
   return eth;
 }
 
+/** 20/09/2026: rede de segurança pro EIP-6963 acima — usuário relatou que, mesmo com
+ *  MetaMask e Bybit Wallet instaladas, a lista de escolha não apareceu e a MetaMask
+ *  abriu sozinha de novo (voltou o bug antigo). Causa provável: nem toda extensão já
+ *  implementa o EIP-6963 (padrão bem mais novo que o `window.ethereum.providers[]`
+ *  abaixo) — se NENHUMA se anunciar por ele (ex: a Bybit Wallet não suporta ainda),
+ *  `availableWallets` fica vazio e `WalletButton.tsx` caía de volta no botão único
+ *  ambíguo de sempre. `getLegacyProviderList()` é o último recurso: se o navegador
+ *  ainda assim tiver MAIS DE UM provider empacotado no jeito antigo
+ *  (`window.ethereum.providers[]`, também usado por várias carteiras), monta uma
+ *  lista a partir dele — nome "chutado" pelas flags conhecidas (`isMetaMask` etc.),
+ *  mas pelo menos aparece como opção separada em vez de escolher sozinho. Só é usado
+ *  quando o EIP-6963 não achou NADA (ver `availableWallets` no valor do contexto,
+ *  mais abaixo) — evita listar a mesma carteira duas vezes quando ela já respondeu
+ *  normalmente ao EIP-6963. */
+function getLegacyProviderList(): EIP6963ProviderDetail[] {
+  const eth = window.ethereum;
+  if (!eth || !Array.isArray(eth.providers) || eth.providers.length < 2) return [];
+  return eth.providers.map((p, i) => ({
+    info: {
+      uuid: `legacy-${i}`,
+      name: p.isMetaMask ? "MetaMask" : `Carteira ${i + 1}`,
+      icon: "",
+      rdns: `legacy.provider.${i}`,
+    },
+    provider: p,
+  }));
+}
+
 /** 17/09/2026: formato mínimo que a instância devolvida por `EthereumProvider.init(...)`
  *  do pacote `@walletconnect/ethereum-provider` precisa ter pra gente usar — ela já
  *  implementa `request`/`on`/`removeListener` iguaizinho a uma carteira injetada
@@ -354,7 +382,17 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
     window.addEventListener("eip6963:announceProvider", onAnnounce);
     window.dispatchEvent(new Event("eip6963:requestProvider"));
-    return () => window.removeEventListener("eip6963:announceProvider", onAnnounce);
+    // 20/09/2026: repete o "chamado" pouco depois — em alguns casos uma extensão mais
+    // pesada termina de carregar (e só aí começa a escutar esse evento) um instante
+    // depois da primeira tentativa, perdendo a primeira chamada e nunca aparecendo na
+    // lista (bug relatado pelo usuário: a lista não apareceu e a MetaMask abriu
+    // sozinha de novo). Não tem custo pra quem já respondeu na primeira tentativa —
+    // `onAnnounce` acima já ignora duplicata pelo `uuid`.
+    const retry = setTimeout(() => window.dispatchEvent(new Event("eip6963:requestProvider")), 800);
+    return () => {
+      window.removeEventListener("eip6963:announceProvider", onAnnounce);
+      clearTimeout(retry);
+    };
   }, []);
 
   // Detect an injected wallet and silently pick up an already-authorized account
@@ -701,7 +739,10 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         invested,
         txs,
         connect,
-        availableWallets,
+        // 20/09/2026: só recorre à lista "legado" (`getLegacyProviderList()`) quando o
+        // EIP-6963 não achou NADA — evita listar a mesma carteira 2x quando ela já
+        // respondeu normalmente ao padrão novo.
+        availableWallets: availableWallets.length > 0 ? availableWallets : getLegacyProviderList(),
         connectWalletConnect,
         walletConnectAvailable: WALLETCONNECT_AVAILABLE,
         disconnect,

@@ -416,37 +416,51 @@ function GamesShowcase() {
       <FloatingGameIcons variant="games" className="hidden md:block" />
       <FloatingGameIcons variant="gamesMobile" className="md:hidden" />
       <div className="relative grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
-        {SHOWCASE_GAMES.map((g, i) => (
-          <motion.div
-            key={g.titleKey}
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.4, delay: i * 0.05 }}
-            className={`glass relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl p-4 text-center transition sm:p-5 ${
-              g.available
-                ? "neon-border hover:-translate-y-1 hover:border-[var(--neon-purple)]/70 hover:shadow-[0_0_24px_rgba(138,46,255,0.3)]"
-                : ""
-            }`}
-          >
-            {!g.available && (
-              <span className="absolute right-2 top-2 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-black/50">
-                <Lock className="h-3.5 w-3.5 text-white/60" />
-              </span>
-            )}
-            <g.Thumb className="h-16 w-16 sm:h-20 sm:w-20" />
-            <span className="text-sm font-semibold text-white">{t(g.titleKey)}</span>
-            <span
-              className={`rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${
+        {SHOWCASE_GAMES.map((g, i) => {
+          const card = (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.4, delay: i * 0.05 }}
+              className={`glass relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl p-4 text-center transition sm:p-5 ${
                 g.available
-                  ? "bg-emerald-400/15 text-emerald-400 ring-1 ring-emerald-400/30"
-                  : "border border-white/10 bg-white/[0.03] text-white/40"
+                  ? "neon-border hover:-translate-y-1 hover:border-[var(--neon-purple)]/70 hover:shadow-[0_0_24px_rgba(138,46,255,0.3)]"
+                  : ""
               }`}
             >
-              {g.available ? t("play.games.available") : t("play.games.soon")}
-            </span>
-          </motion.div>
-        ))}
+              {!g.available && (
+                <span className="absolute right-2 top-2 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-black/50">
+                  <Lock className="h-3.5 w-3.5 text-white/60" />
+                </span>
+              )}
+              <g.Thumb className="h-16 w-16 sm:h-20 sm:w-20" />
+              <span className="text-sm font-semibold text-white">{t(g.titleKey)}</span>
+              <span
+                className={`rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${
+                  g.available
+                    ? "bg-emerald-400/15 text-emerald-400 ring-1 ring-emerald-400/30"
+                    : "border border-white/10 bg-white/[0.03] text-white/40"
+                }`}
+              >
+                {g.available ? t("play.games.available") : t("play.games.soon")}
+              </span>
+            </motion.div>
+          );
+
+          // 20/09/2026: o card do Lig-4 (hoje o único jogo "Disponível agora") virou um
+          // link direto pro jogo — clicar nele já abre /play com o Lig-4 pré-selecionado
+          // (pula a etapa de escolher o jogo de novo lá dentro, ver `start` em
+          // play.tsx/Route.validateSearch), em vez de só cair no hub genérico exigindo
+          // mais um clique. Os cards "Em breve" continuam sem link (não são clicáveis).
+          return g.available ? (
+            <Link key={g.titleKey} to="/play" search={{ start: "connect4" }} aria-label={t(g.titleKey)}>
+              {card}
+            </Link>
+          ) : (
+            <div key={g.titleKey}>{card}</div>
+          );
+        })}
       </div>
       <div className="relative mt-8 text-center">
         <Link to="/play" className="btn-neon btn-neon-hover">

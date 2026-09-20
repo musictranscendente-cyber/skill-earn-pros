@@ -43,7 +43,16 @@ import {
   AirHockeyThumb,
 } from "@/components/play/GameThumbs";
 
+/** 20/09/2026: deixa a Home linkar direto pro jogo — `/play?start=connect4` já abre
+ *  com o Lig-4 selecionado (mesmo efeito de clicar no card dele aqui dentro), em vez
+ *  de cair sempre na tela de escolher o jogo. Mesmo padrão do `?amount=` em
+ *  genesis.tsx (deep-link pra uma tier específica). */
+type PlaySearch = { start?: string };
+
 export const Route = createFileRoute("/play")({
+  validateSearch: (search: Record<string, unknown>): PlaySearch => ({
+    start: typeof search.start === "string" ? search.start : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Play Demo — PvP Pro" },
@@ -132,6 +141,7 @@ type ResultType = "win" | "lose" | "draw" | null;
 
 function PlayPage() {
   const { t } = useLang();
+  const searchParams = Route.useSearch();
   const [stage, setStage] = useState<Stage>("select");
   const [stake, setStake] = useState(5);
   const [board, setBoard] = useState<BoardType>(() => createEmptyBoard());
@@ -145,6 +155,15 @@ function PlayPage() {
     initSoundPreference();
     setSoundOn(isSoundEnabled());
   }, []);
+
+  // 20/09/2026: chegou aqui via um link com "?start=connect4" (ex: o card do Lig-4 na
+  // Home) — pula direto pra tela de escolher a aposta, sem passar pela grade de
+  // seleção de jogo de novo. Só dispara a partir de "select" (não interfere se a
+  // pessoa já estiver no meio de uma partida e o parâmetro continuar na URL).
+  useEffect(() => {
+    if (searchParams.start === "connect4" && stage === "select") setStage("intro");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams.start]);
 
   function toggleSound() {
     const next = !soundOn;
