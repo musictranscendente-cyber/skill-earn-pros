@@ -256,6 +256,15 @@ function getInjectedProvider(): EIP1193Provider | undefined {
  *  mais abaixo) — evita listar a mesma carteira duas vezes quando ela já respondeu
  *  normalmente ao EIP-6963. */
 function getLegacyProviderList(): EIP6963ProviderDetail[] {
+  // 20/09/2026 (correção urgente): essa função é chamada de dentro do valor do
+  // contexto (`availableWallets` mais abaixo), que roda em TODA renderização — inclusive
+  // no servidor (SSR do @tanstack/react-start), onde `window` não existe. Sem essa
+  // checagem, todo carregamento de página quebrava com "window is not defined" (site
+  // inteiro fora do ar, erro 500 — bug real causado por mim, sem querer, na correção
+  // anterior). As outras funções que usam `window.ethereum` (getInjectedProvider, etc.)
+  // só são chamadas de dentro de useEffect/handlers de clique, que nunca rodam no
+  // servidor — por isso nunca deram esse problema.
+  if (typeof window === "undefined") return [];
   const eth = window.ethereum;
   if (!eth || !Array.isArray(eth.providers) || eth.providers.length < 2) return [];
   return eth.providers.map((p, i) => ({
