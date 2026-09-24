@@ -37,9 +37,8 @@ export function Footer() {
             <SocialIcon label="Telegram" href="https://t.me/pvprofounder">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
             </SocialIcon>
-            <SocialIcon label="X" href="https://x.com/pvpprofounder">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2H21l-6.52 7.45L22 22h-6.828l-4.77-6.243L4.8 22H2l7.04-8.05L2 2h6.914l4.34 5.73L18.244 2zm-1.196 18h1.79L7.05 4H5.13l11.918 16z"/></svg>
-            </SocialIcon>
+            {/* 24/09/2026: ícone do X removido a pedido do usuário — conta suspensa por
+             *  enquanto. Reativar aqui (com o link certo) quando a conta voltar. */}
             <Link
               to="/whitepaper"
               aria-label="Whitepaper"
