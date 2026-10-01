@@ -10,8 +10,15 @@ import {
   checkWinner,
   isBoardFull,
   getBotMove,
-  type Board as BoardType,
 } from "@/lib/connect4";
+import { TicTacToeBoard } from "@/components/tictactoe/Board";
+import {
+  createEmptyBoard as createEmptyTTTBoard,
+  placeMark,
+  checkWinner as checkWinnerTTT,
+  isBoardFull as isBoardFullTTT,
+  getBotMove as getBotMoveTTT,
+} from "@/lib/tictactoe";
 import { useLang } from "@/lib/i18n";
 import {
   playClick,
@@ -56,7 +63,7 @@ export const Route = createFileRoute("/play")({
   head: () => ({
     meta: [
       { title: "Play Demo — PvP Pro" },
-      { name: "description", content: "Free open demo — feel what a PvP Pro duel is like before launch. Simulated match, real gameplay: Connect 4 against a bot opponent." },
+      { name: "description", content: "Free open demo — feel what a PvP Pro duel is like before launch. Simulated match, real gameplay: Connect 4 and Tic-Tac-Toe against a bot opponent." },
       { property: "og:url", content: "/play" },
     ],
     links: [{ rel: "canonical", href: "/play" }],
@@ -118,22 +125,27 @@ const OPPONENTS = [
 ];
 const CONFETTI_COLORS = ["#8A2EFF", "#00B2FF", "#facc15", "#34d399", "#f472b6"];
 
+/** 01/10/2026: antes só existia "connect4" — agora que o Jogo da Velha também é
+ *  jogável, os dois ids válidos de `?start=` viram um tipo próprio (`PlayableGameId`),
+ *  reaproveitado também pelo estado `selectedGame` mais abaixo. */
+type PlayableGameId = "connect4" | "tictactoe";
+
 const GAMES = [
-  { id: "connect4", Thumb: Connect4Thumb, titleKey: "play.games.connect4" as const, available: true },
-  { id: "checkers", Thumb: CheckersThumb, titleKey: "play.games.checkers" as const, available: false },
-  { id: "domino", Thumb: DominoThumb, titleKey: "play.games.domino" as const, available: false },
-  { id: "tictactoe", Thumb: TicTacToeThumb, titleKey: "play.games.tictactoe" as const, available: false },
-  { id: "pool", Thumb: PoolThumb, titleKey: "play.games.pool" as const, available: false },
-  { id: "chess", Thumb: ChessThumb, titleKey: "play.games.chess" as const, available: false },
-  { id: "truco", Thumb: CardsThumb, titleKey: "play.games.truco" as const, available: false },
-  { id: "battleship", Thumb: BattleshipThumb, titleKey: "play.games.battleship" as const, available: false },
-  { id: "racing", Thumb: RacingThumb, titleKey: "play.games.racing" as const, available: false },
-  { id: "quiz", Thumb: QuizThumb, titleKey: "play.games.quiz" as const, available: false },
-  { id: "maze", Thumb: MazeThumb, titleKey: "play.games.maze" as const, available: false },
-  { id: "arena", Thumb: ArenaThumb, titleKey: "play.games.arena" as const, available: false },
-  { id: "sudoku", Thumb: SudokuThumb, titleKey: "play.games.sudoku" as const, available: false },
-  { id: "pingpong", Thumb: PingPongThumb, titleKey: "play.games.pingpong" as const, available: false },
-  { id: "airhockey", Thumb: AirHockeyThumb, titleKey: "play.games.airhockey" as const, available: false },
+  { id: "connect4" as const, Thumb: Connect4Thumb, titleKey: "play.games.connect4" as const, available: true },
+  { id: "checkers" as const, Thumb: CheckersThumb, titleKey: "play.games.checkers" as const, available: false },
+  { id: "domino" as const, Thumb: DominoThumb, titleKey: "play.games.domino" as const, available: false },
+  { id: "tictactoe" as const, Thumb: TicTacToeThumb, titleKey: "play.games.tictactoe" as const, available: true },
+  { id: "pool" as const, Thumb: PoolThumb, titleKey: "play.games.pool" as const, available: false },
+  { id: "chess" as const, Thumb: ChessThumb, titleKey: "play.games.chess" as const, available: false },
+  { id: "truco" as const, Thumb: CardsThumb, titleKey: "play.games.truco" as const, available: false },
+  { id: "battleship" as const, Thumb: BattleshipThumb, titleKey: "play.games.battleship" as const, available: false },
+  { id: "racing" as const, Thumb: RacingThumb, titleKey: "play.games.racing" as const, available: false },
+  { id: "quiz" as const, Thumb: QuizThumb, titleKey: "play.games.quiz" as const, available: false },
+  { id: "maze" as const, Thumb: MazeThumb, titleKey: "play.games.maze" as const, available: false },
+  { id: "arena" as const, Thumb: ArenaThumb, titleKey: "play.games.arena" as const, available: false },
+  { id: "sudoku" as const, Thumb: SudokuThumb, titleKey: "play.games.sudoku" as const, available: false },
+  { id: "pingpong" as const, Thumb: PingPongThumb, titleKey: "play.games.pingpong" as const, available: false },
+  { id: "airhockey" as const, Thumb: AirHockeyThumb, titleKey: "play.games.airhockey" as const, available: false },
 ];
 
 type Stage = "select" | "intro" | "searching" | "found" | "playing" | "result";
@@ -143,8 +155,12 @@ function PlayPage() {
   const { t } = useLang();
   const searchParams = Route.useSearch();
   const [stage, setStage] = useState<Stage>("select");
+  const [selectedGame, setSelectedGame] = useState<PlayableGameId>("connect4");
   const [stake, setStake] = useState(5);
-  const [board, setBoard] = useState<BoardType>(() => createEmptyBoard());
+  // 01/10/2026: tipo genérico (não mais só o `Board` do Lig-4) — connect4.ts e
+  // tictactoe.ts usam exatamente o mesmo "formato" de dados (matriz de 0/1/2), só o
+  // TAMANHO do tabuleiro e como uma jogada é feita mudam entre os dois jogos.
+  const [board, setBoard] = useState<(0 | 1 | 2)[][]>(() => createEmptyBoard());
   const [turn, setTurn] = useState<1 | 2>(1);
   const [winLine, setWinLine] = useState<[number, number][] | null>(null);
   const [resultType, setResultType] = useState<ResultType>(null);
@@ -160,8 +176,14 @@ function PlayPage() {
   // Home) — pula direto pra tela de escolher a aposta, sem passar pela grade de
   // seleção de jogo de novo. Só dispara a partir de "select" (não interfere se a
   // pessoa já estiver no meio de uma partida e o parâmetro continuar na URL).
+  // 01/10/2026: estendido pro Jogo da Velha (`?start=tictactoe`) — qualquer id válido
+  // em `PlayableGameId` também seleciona o jogo certo, não só pula a etapa.
   useEffect(() => {
-    if (searchParams.start === "connect4" && stage === "select") setStage("intro");
+    if (stage !== "select") return;
+    if (searchParams.start === "connect4" || searchParams.start === "tictactoe") {
+      setSelectedGame(searchParams.start);
+      setStage("intro");
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams.start]);
 
@@ -172,10 +194,16 @@ function PlayPage() {
     if (next) playClick();
   }
 
+  // 01/10/2026: tabuleiro vazio certo pro jogo selecionado — antes só existia o do
+  // Lig-4 (`createEmptyBoard()` direto); agora depende de `selectedGame`.
+  function emptyBoardFor(game: PlayableGameId): (0 | 1 | 2)[][] {
+    return game === "connect4" ? createEmptyBoard() : createEmptyTTTBoard();
+  }
+
   function beginSearch() {
     playClick();
     setOpponent(OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)]);
-    setBoard(createEmptyBoard());
+    setBoard(emptyBoardFor(selectedGame));
     setWinLine(null);
     setResultType(null);
     setTurn(1);
@@ -193,7 +221,7 @@ function PlayPage() {
 
   function startMatch() {
     playClick();
-    setBoard(createEmptyBoard());
+    setBoard(emptyBoardFor(selectedGame));
     setWinLine(null);
     setResultType(null);
     setTurn(1);
@@ -201,7 +229,7 @@ function PlayPage() {
   }
 
   function handleDrop(col: number) {
-    if (stage !== "playing" || turn !== 1) return;
+    if (stage !== "playing" || turn !== 1 || selectedGame !== "connect4") return;
     const dropped = dropPiece(board, col, 1);
     if (!dropped) return;
     playDrop(dropped.row);
@@ -221,31 +249,77 @@ function PlayPage() {
     setTurn(2);
   }
 
+  // 01/10/2026: equivalente do handleDrop acima, mas pro Jogo da Velha — clique direto
+  // na célula (sem "cair" por gravidade). Reaproveita o som de clique (`playClick`) em
+  // vez do "clack + thud" do Lig-4 (`playDrop`), que foi desenhado pra peça caindo.
+  function handleCellClick(row: number, col: number) {
+    if (stage !== "playing" || turn !== 1 || selectedGame !== "tictactoe") return;
+    const placed = placeMark(board, row, col, 1);
+    if (!placed) return;
+    playClick();
+    setBoard(placed.board);
+    const win = checkWinnerTTT(placed.board);
+    if (win) {
+      setWinLine(win.line);
+      setResultType(win.winner === 1 ? "win" : "lose");
+      setStage("result");
+      return;
+    }
+    if (isBoardFullTTT(placed.board)) {
+      setResultType("draw");
+      setStage("result");
+      return;
+    }
+    setTurn(2);
+  }
+
   useEffect(() => {
     if (stage !== "playing" || turn !== 2) return;
     const id = setTimeout(() => {
-      const col = getBotMove(board, 2, 1);
-      if (col < 0) return;
-      const dropped = dropPiece(board, col, 2);
-      if (!dropped) return;
-      playDrop(dropped.row);
-      setBoard(dropped.board);
-      const win = checkWinner(dropped.board);
-      if (win) {
-        setWinLine(win.line);
-        setResultType(win.winner === 1 ? "win" : "lose");
-        setStage("result");
-        return;
+      if (selectedGame === "connect4") {
+        const col = getBotMove(board, 2, 1);
+        if (col < 0) return;
+        const dropped = dropPiece(board, col, 2);
+        if (!dropped) return;
+        playDrop(dropped.row);
+        setBoard(dropped.board);
+        const win = checkWinner(dropped.board);
+        if (win) {
+          setWinLine(win.line);
+          setResultType(win.winner === 1 ? "win" : "lose");
+          setStage("result");
+          return;
+        }
+        if (isBoardFull(dropped.board)) {
+          setResultType("draw");
+          setStage("result");
+          return;
+        }
+        setTurn(1);
+      } else {
+        const move = getBotMoveTTT(board, 2, 1);
+        if (!move) return;
+        const placed = placeMark(board, move[0], move[1], 2);
+        if (!placed) return;
+        playClick();
+        setBoard(placed.board);
+        const win = checkWinnerTTT(placed.board);
+        if (win) {
+          setWinLine(win.line);
+          setResultType(win.winner === 1 ? "win" : "lose");
+          setStage("result");
+          return;
+        }
+        if (isBoardFullTTT(placed.board)) {
+          setResultType("draw");
+          setStage("result");
+          return;
+        }
+        setTurn(1);
       }
-      if (isBoardFull(dropped.board)) {
-        setResultType("draw");
-        setStage("result");
-        return;
-      }
-      setTurn(1);
     }, 750);
     return () => clearTimeout(id);
-  }, [stage, turn, board]);
+  }, [stage, turn, board, selectedGame]);
 
   useEffect(() => {
     if (stage !== "result") return;
@@ -344,6 +418,10 @@ function PlayPage() {
                       onClick={() => {
                         if (!g.available) return;
                         playClick();
+                        // `g.id` cobre todos os ids do catálogo (a maioria "Em breve");
+                        // o `return` acima já garante que só um `id` de `PlayableGameId`
+                        // (os marcados `available: true`) chega até aqui.
+                        setSelectedGame(g.id as PlayableGameId);
                         setStage("intro");
                       }}
                       className={`glass relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl p-4 text-center transition sm:p-5 ${
@@ -516,13 +594,23 @@ function PlayPage() {
                       transition={{ duration: 0.25 }}
                       className="w-full"
                     >
-                      <Connect4Board
-                        board={board}
-                        onDrop={handleDrop}
-                        disabled={stage !== "playing"}
-                        winningLine={winLine}
-                        activePlayer={turn}
-                      />
+                      {selectedGame === "connect4" ? (
+                        <Connect4Board
+                          board={board}
+                          onDrop={handleDrop}
+                          disabled={stage !== "playing"}
+                          winningLine={winLine}
+                          activePlayer={turn}
+                        />
+                      ) : (
+                        <TicTacToeBoard
+                          board={board}
+                          onPlay={handleCellClick}
+                          disabled={stage !== "playing"}
+                          winningLine={winLine}
+                          activePlayer={turn}
+                        />
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
