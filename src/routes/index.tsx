@@ -346,14 +346,16 @@ function Stat({
 // 01/10/2026: ganhou `id` — antes só o Lig-4 era jogável (link fixo "connect4"), agora
 // que o Jogo da Velha também é, o card precisa saber o id de CADA jogo pra linkar
 // certo (`?start=<id>`, ver play.tsx/Route.validateSearch) em vez de um valor fixo.
+// 01/10/2026: jogos "Disponível agora" (available: true) sempre na frente da lista,
+// a pedido do usuário — o resto ("Em breve") vem depois, em qualquer ordem.
 const SHOWCASE_GAMES = [
   { id: "connect4", Thumb: Connect4Thumb, titleKey: "play.games.connect4" as const, available: true },
+  { id: "tictactoe", Thumb: TicTacToeThumb, titleKey: "play.games.tictactoe" as const, available: true },
   { id: "checkers", Thumb: CheckersThumb, titleKey: "play.games.checkers" as const, available: false },
   { id: "chess", Thumb: ChessThumb, titleKey: "play.games.chess" as const, available: false },
   { id: "domino", Thumb: DominoThumb, titleKey: "play.games.domino" as const, available: false },
   { id: "truco", Thumb: CardsThumb, titleKey: "play.games.truco" as const, available: false },
   { id: "pool", Thumb: PoolThumb, titleKey: "play.games.pool" as const, available: false },
-  { id: "tictactoe", Thumb: TicTacToeThumb, titleKey: "play.games.tictactoe" as const, available: true },
   { id: "battleship", Thumb: BattleshipThumb, titleKey: "play.games.battleship" as const, available: false },
   { id: "sudoku", Thumb: SudokuThumb, titleKey: "play.games.sudoku" as const, available: false },
   { id: "pingpong", Thumb: PingPongThumb, titleKey: "play.games.pingpong" as const, available: false },

@@ -130,11 +130,13 @@ const CONFETTI_COLORS = ["#8A2EFF", "#00B2FF", "#facc15", "#34d399", "#f472b6"];
  *  reaproveitado também pelo estado `selectedGame` mais abaixo. */
 type PlayableGameId = "connect4" | "tictactoe";
 
+// 01/10/2026: jogos "Disponível agora" (available: true) sempre na frente da lista,
+// a pedido do usuário — o resto ("Em breve") vem depois, em qualquer ordem.
 const GAMES = [
   { id: "connect4" as const, Thumb: Connect4Thumb, titleKey: "play.games.connect4" as const, available: true },
+  { id: "tictactoe" as const, Thumb: TicTacToeThumb, titleKey: "play.games.tictactoe" as const, available: true },
   { id: "checkers" as const, Thumb: CheckersThumb, titleKey: "play.games.checkers" as const, available: false },
   { id: "domino" as const, Thumb: DominoThumb, titleKey: "play.games.domino" as const, available: false },
-  { id: "tictactoe" as const, Thumb: TicTacToeThumb, titleKey: "play.games.tictactoe" as const, available: true },
   { id: "pool" as const, Thumb: PoolThumb, titleKey: "play.games.pool" as const, available: false },
   { id: "chess" as const, Thumb: ChessThumb, titleKey: "play.games.chess" as const, available: false },
   { id: "truco" as const, Thumb: CardsThumb, titleKey: "play.games.truco" as const, available: false },
